@@ -11,6 +11,10 @@
 - **Device & Orientation Strategy**: iPads get full portrait + landscape. Smaller phones are portrait-only in some views. Larger phones may support landscape selectively. (This area is known to be tricky.)
 - **Geometry Reading**: Strong preference to avoid `GeometryReader`. Primary tool will be `.onGeometryChange` (iOS 18+), ideally centralized through managers.
 - **Design System**: Using "Liquid Glass" as the foundational UI language throughout the app.
+- **Navigation & Presentation Model**:
+  - HomeView acts as the central hub and will host the main menu (sidebar under consideration for iPad).
+  - The RealityKit Cosmology Explorer will **not** have its own menu.
+  - Explorer is launched from HomeView via `.fullScreenCover(isPresented: $showExplorer, onDismiss: { ... })` for maximum immersion.
 - **RealityKit Cosmology Explorer**: Early vision documented in ARCHITECTURE.md. Layered 3D representation of Gnostic cosmology is the heart of the app.
 - **Sanity Schema**: Still undecided. Current models in `Model/DivineCodex.swift` are generic placeholders. Expect refactoring once the schema is defined in Sanity Studio.
 

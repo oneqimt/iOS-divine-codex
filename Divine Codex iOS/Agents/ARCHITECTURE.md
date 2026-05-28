@@ -116,6 +116,8 @@ Root Entity (World Anchor)
 - **Entity Manager**: `CosmologyEntityManager` — responsible for showing/hiding layers, coordinating animations, and managing scene state
 - **Interaction System**: Tap gestures on entities (especially Syzygies) to surface detail information
 
+**Presentation**: The Cosmology Explorer will be presented as a full-screen immersive experience from HomeView using `.fullScreenCover`. It will not contain its own persistent menu or navigation chrome.
+
 ### Interaction & Navigation
 - Pinch to Zoom — Primary method for moving between cosmic layers
 - Tap on Syzygy or Entity — Opens contextual detail view with information
@@ -214,8 +216,10 @@ Divine Codex iOS/
    - Dark mode only (the cosmos is dark).
 
 5. **Navigation**:
-   - SwiftUI `NavigationStack` + `TabView` (Home | Explore | Codex | Profile) for the main experience.
-   - Deep linking support for future "start a guided journey" from web or widgets.
+   - HomeView serves as the central hub / main menu (sidebar on iPad, adapted experience on iPhone).
+   - The RealityKit Cosmology Explorer is launched from HomeView as a fully immersive `.fullScreenCover`. It contains no persistent menu or navigation.
+   - Deep linking support planned for future "start a guided journey" from web or widgets.
+   - Navigation patterns are still evolving and must respect the different orientation rules across device sizes.
 
 6. **Authentication**:
    - Shared Supabase project with the web app.
