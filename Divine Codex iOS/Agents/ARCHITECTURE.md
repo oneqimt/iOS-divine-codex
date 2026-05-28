@@ -58,6 +58,12 @@ The following managers/helpers are expected to be needed:
 
 This subsystem will likely require significant iteration and careful testing. It should be treated as a high-risk area during development.
 
+#### Layout & Geometry Reading Strategy
+
+- Strong preference to **avoid `GeometryReader`** wherever possible. It has historically been a major source of layout instability, performance issues, and unpredictable behavior during orientation changes.
+- The primary tool for observing view size and geometry changes will be the `.onGeometryChange` modifier (introduced in iOS 18).
+- Size and orientation data should ideally be centralized through `ScreenSizeHelper` and/or `OrientationManager` rather than read directly in individual views.
+
 > **Note**: These rules and the supporting architecture are still early and will almost certainly evolve as the app grows.
 
 ## RealityKit Scene Structure (iOS Cosmology Explorer)
