@@ -7,5 +7,6 @@
 
 import Foundation
 
-// Pagination constants
-let PAGE_SIZE = 20
+
+let IMAGE_NAMES : [String] = ["monad-emanation.jpg","monad-eye-refined.jpg","monas-source.jpg","logo.jpg", "icon.png"]
+
