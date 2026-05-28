@@ -6,7 +6,7 @@ Native iOS companion app to the Divine Codex web experience. The app provides an
 
 The iOS app is a spiritual and technical counterpart to the Next.js web experience at https://github.com/oneqimt/divine-codex.
 
-## Core Philosophy & Tone (Shared with Web) dj test
+## Core Philosophy & Tone (Shared with Web)
 
 - Humanity carries a **Divine Spark** — a fractal of the Monad within each soul.
 - Sophia played a key role in bringing this spark into the lower realms.
@@ -103,8 +103,38 @@ Divine Codex iOS/
 
 - The git repository lives at the folder level containing the `.xcodeproj` (standard Xcode layout).
 - Always run `git status` before committing — Xcode loves to touch project files.
-- The `.gitignore` is comprehensive and excludes `xcuserdata/`, `DerivedData/`, `build/`, etc.
 - Remote: `origin` → https://github.com/oneqimt/iOS-divine-codex.git
+
+### Git + Xcode Workflow (Important)
+
+Because this project is developed with heavy use of terminal git + AI coding assistants (Grok + Claude working in concert), we have added tooling to reduce the classic Xcode + Git friction.
+
+#### Supporting Files
+
+| File                    | Purpose |
+|-------------------------|---------|
+| `.gitignore`            | Aggressive rules to ignore `xcuserdata/`, `DerivedData/`, workspace state, etc. |
+| `.gitattributes`        | Uses `merge=union` on `*.pbxproj`, `*.xcworkspacedata`, and `*.xcscheme` to reduce painful merge conflicts during rebase / branch work. |
+| `bin/reset-xcode.sh`    | Quick reset script for when Xcode shows “file modified by another application” after git operations. |
+
+#### Recommended Ritual After Terminal Git Work
+
+When you (or an AI) perform git operations in the terminal (rebase, pull --rebase, branch switching, etc.):
+
+1. Run the reset script:
+   ```bash
+   ./bin/reset-xcode.sh
+   ```
+2. Reopen the project in Xcode.
+3. If things still feel off, do **Product → Clean Build Folder** (⇧⌘K).
+
+The script will ask whether you also want to clear workspace user data (open files, breakpoints, etc.). Most of the time you can say no first.
+
+#### Why This Matters
+
+Xcode constantly writes to `project.pbxproj` and files inside `*.xcworkspace/` even when you only open the project. Combined with terminal-based git work and AI agents making structural changes, this creates frequent “modified by another application” warnings. The files above + the reset script are the practical countermeasures while staying with a raw Xcode project.
+
+**Tip:** You can run the reset script proactively whenever Xcode starts feeling sluggish or confused after a big set of AI-driven changes.
 
 ## Related Repositories
 
