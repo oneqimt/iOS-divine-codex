@@ -6,7 +6,7 @@ Native iOS companion app to the Divine Codex web experience. The app provides an
 
 The iOS app is a spiritual and technical counterpart to the Next.js web experience at https://github.com/oneqimt/divine-codex.
 
-## Core Philosophy & Tone (Shared with Web)
+## Core Philosophy & Tone (Shared with Web) dj test
 
 - Humanity carries a **Divine Spark** — a fractal of the Monad within each soul.
 - Sophia played a key role in bringing this spark into the lower realms.
