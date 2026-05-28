@@ -63,29 +63,34 @@ Root Entity (World Anchor)
 └── Chaos / Lower Realms (Bottom)
     └── Darker, more turbulent particle effects
 
-###Key RealityKit Components**
-- Main Scene: CosmologyScene.swift
-- Camera Controller: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
-- Entity Manager: CosmologyEntityManager — handles showing/hiding layers, animations, and state
-- Interaction System: Tap gestures on syzygies → show detail sheet
-- Animation System:
-Gentle pulsing on divine entities
-Flowing light trails for ascent/descent paths
-Particle systems for divine light and chaos
-- Interaction Design
-Pinch to Zoom — Move between cosmic layers
-Tap on Syzygy — Opens detail view with information about that divine pair
-Long Press on Layer — Brief description tooltip
-Haptic Feedback on important interactions
-VoiceOver Support for accessibility
-- Performance Considerations
-Use Level of Detail (LOD) for distant entities
-Occlusion culling
-Lazy loading of high-detail models
-Separate lightweight mode for older devices
-- Data Integration
-Content (names, descriptions, images) loaded from Sanity CMS
-User progress (visited layers, favorite syzygies) saved in Supabase
+### Key RealityKit Components
+
+- **Main Scene**: `CosmologyScene.swift`
+- **Camera Controller**: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
+- **Entity Manager**: `CosmologyEntityManager` — handles showing/hiding layers, animations, and state
+- **Interaction System**: Tap gestures on syzygies → show detail sheet
+
+#### Animation System
+- Gentle pulsing on divine entities
+- Flowing light trails for ascent/descent paths
+- Particle systems for divine light and chaos
+
+#### Interaction Design
+- Pinch to Zoom — Move between cosmic layers
+- Tap on Syzygy — Opens detail view with information about that divine pair
+- Long Press on Layer — Brief description tooltip
+- Haptic Feedback on important interactions
+- VoiceOver Support for accessibility
+
+#### Performance Considerations
+- Use Level of Detail (LOD) for distant entities
+- Occlusion culling
+- Lazy loading of high-detail models
+- Separate lightweight mode for older devices
+
+#### Data Integration
+- Content (names, descriptions, images) loaded from Sanity CMS
+- User progress (visited layers, favorite syzygies) saved in Supabase
 
 
 

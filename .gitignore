@@ -18,6 +18,26 @@ DerivedData/
 *.dSYM
 *.dSYM.zip
 
+## === Secrets & Sensitive Data (CRITICAL) ===
+# Never commit API keys, tokens, or secret files
+secret.swift
+secrets.swift
+*secret*.swift
+*token*.swift
+*apikey*.swift
+*credentials*.swift
+SanityToken.swift
+SanitySecrets.swift
+
+# Common secret file patterns
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*Secrets.plist
+*Credentials.plist
+
 ## === Legacy Xcode user files (pre-Xcode 9) ===
 *.xcscmblueprint
 *.xccheckout
