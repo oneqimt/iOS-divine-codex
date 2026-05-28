@@ -34,8 +34,21 @@ The iOS app is a spiritual and technical counterpart to the Next.js web experien
 - All major UI elements (buttons, cards, backgrounds, transitions, navigation) are built on or styled through Liquid Glass rather than using raw SwiftUI modifiers directly. This ensures visual and spiritual coherence.
 
 ## RealityKit Scene Structure (iOS Cosmology Explorer)
-- **Core Philosophy** - The main 3D scene will be a layered, zoomable, spiritually immersive representation of Gnostic cosmology. Users should feel like they are floating through sacred space.
-- **Scene Hierarchy (Entity Structure)**
+
+This section outlines the early vision and technical direction for the main immersive 3D experience — the Cosmology Explorer — built with RealityKit.
+
+### Vision & Experience Goals
+The main 3D scene should feel like a layered, zoomable, spiritually immersive representation of Gnostic cosmology. Users should have the sense of gently floating through sacred space rather than navigating a traditional 3D environment.
+
+Key experiential goals:
+- A sense of depth, mystery, and reverence
+- Smooth, contemplative navigation between cosmic layers
+- Visual harmony with the Liquid Glass design language used elsewhere in the app
+
+### Conceptual Scene Hierarchy
+The scene is conceptually organized as a vertical layered cosmos. This structure is currently a working model and will likely evolve as the Sanity content schema is defined.
+
+```
 Root Entity (World Anchor)
 ├── Light System (Directional + Ambient + Point lights with golden/violet hues)
 ├── Background Stars / Nebula Entity (Particle System)
@@ -62,35 +75,51 @@ Root Entity (World Anchor)
 │
 └── Chaos / Lower Realms (Bottom)
     └── Darker, more turbulent particle effects
+```
 
-### Key RealityKit Components
+### Core Technical Components (Early Direction)
+- **Main Scene Controller**: `CosmologyScene.swift`
+- **Camera System**: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
+- **Entity Manager**: `CosmologyEntityManager` — responsible for showing/hiding layers, coordinating animations, and managing scene state
+- **Interaction System**: Tap gestures on entities (especially Syzygies) to surface detail information
 
-- **Main Scene**: `CosmologyScene.swift`
-- **Camera Controller**: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
-- **Entity Manager**: `CosmologyEntityManager` — handles showing/hiding layers, animations, and state
-- **Interaction System**: Tap gestures on syzygies → show detail sheet
-
-#### Animation System
-- Gentle pulsing on divine entities
-- Flowing light trails for ascent/descent paths
-- Particle systems for divine light and chaos
-
-#### Interaction Design
-- Pinch to Zoom — Move between cosmic layers
-- Tap on Syzygy — Opens detail view with information about that divine pair
-- Long Press on Layer — Brief description tooltip
-- Haptic Feedback on important interactions
+### Interaction & Navigation
+- Pinch to Zoom — Primary method for moving between cosmic layers
+- Tap on Syzygy or Entity — Opens contextual detail view with information
+- Long Press on Layer — Shows brief contextual tooltip
+- Haptic Feedback on meaningful interactions
 - VoiceOver Support for accessibility
 
-#### Performance Considerations
-- Use Level of Detail (LOD) for distant entities
-- Occlusion culling
-- Lazy loading of high-detail models
-- Separate lightweight mode for older devices
+Future considerations include focus transitions between layers and constrained camera movement that respects the sacred layered structure.
 
-#### Data Integration
-- Content (names, descriptions, images) loaded from Sanity CMS
-- User progress (visited layers, favorite syzygies) saved in Supabase
+### Animation & Atmosphere
+- Gentle pulsing on divine entities
+- Flowing light trails for ascent/descent paths
+- Particle systems for divine light, stars, and chaotic energy
+- Subtle ambient movement to create a living, breathing cosmos
+
+### Performance & Technical Considerations
+- Use Level of Detail (LOD) for distant entities
+- Occlusion culling where appropriate
+- Lazy / progressive loading of high-detail content
+- Separate lightweight rendering mode for older devices
+- Careful management of particle systems and lighting complexity
+
+### Content & Data Integration (Early Direction)
+Since the Sanity schema is still being defined, content integration is intentionally kept high-level for now:
+
+- Descriptive content (names, descriptions, imagery) will eventually be driven by Sanity CMS
+- User-specific data (visited layers, favorites, progress) is expected to be stored via Supabase
+- The scene should be designed to support data-driven configuration of entities (positioning, visual properties, relationships) once the content models are finalized
+
+This area will require significant refinement after the Sanity Studio schema is established.
+
+### Open Questions & Future Work
+- How will entities be created and configured from CMS data?
+- What is the final camera and navigation model?
+- Will the experience use pure 3D or include AR capabilities?
+- How should state be persisted and restored between sessions?
+- What level of customization (if any) will users have over the visual experience?
 
 
 
