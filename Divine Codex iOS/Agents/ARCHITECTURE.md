@@ -33,6 +33,33 @@ The iOS app is a spiritual and technical counterpart to the Next.js web experien
 - **Liquid Glass**: The core visual and interaction foundation used consistently across all screens and components. This provides the fluid, liquid-like behavior, glassmorphism, and sacred aesthetic that defines the app’s experience.
 - All major UI elements (buttons, cards, backgrounds, transitions, navigation) are built on or styled through Liquid Glass rather than using raw SwiftUI modifiers directly. This ensures visual and spiritual coherence.
 
+### Device & Orientation Support
+
+This app must support a range of iOS devices with **different orientation rules** depending on screen size and form factor. This is a known complex area.
+
+**Current Guidelines (subject to refinement):**
+
+- **iPad**: Full support for both portrait and landscape in **all views**.
+- **Smaller iPhones**: Portrait-only in some views (to be defined).
+- **Larger iPhones**: Landscape support may be enabled in selected views.
+
+#### Key Challenges
+- Inconsistent orientation rules across different view types and device sizes.
+- Complexity of managing layout, navigation, and especially RealityKit scenes during orientation changes.
+- Risk of subtle bugs around safe areas, split view, multitasking (iPad), and 3D scene state.
+- Historical pain point — this area has proven difficult on previous projects.
+
+#### Anticipated Components
+The following managers/helpers are expected to be needed:
+
+- `OrientationManager`
+- `DeviceMotionManager`
+- `ScreenSizeHelper` (possible)
+
+This subsystem will likely require significant iteration and careful testing. It should be treated as a high-risk area during development.
+
+> **Note**: These rules and the supporting architecture are still early and will almost certainly evolve as the app grows.
+
 ## RealityKit Scene Structure (iOS Cosmology Explorer)
 
 This section outlines the early vision and technical direction for the main immersive 3D experience — the Cosmology Explorer — built with RealityKit.
