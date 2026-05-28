@@ -33,6 +33,62 @@ The iOS app is a spiritual and technical counterpart to the Next.js web experien
 - **Liquid Glass**: The core visual and interaction foundation used consistently across all screens and components. This provides the fluid, liquid-like behavior, glassmorphism, and sacred aesthetic that defines the app’s experience.
 - All major UI elements (buttons, cards, backgrounds, transitions, navigation) are built on or styled through Liquid Glass rather than using raw SwiftUI modifiers directly. This ensures visual and spiritual coherence.
 
+## RealityKit Scene Structure (iOS Cosmology Explorer)
+- **Core Philosophy** - The main 3D scene will be a layered, zoomable, spiritually immersive representation of Gnostic cosmology. Users should feel like they are floating through sacred space.
+- **Scene Hierarchy (Entity Structure)**
+Root Entity (World Anchor)
+├── Light System (Directional + Ambient + Point lights with golden/violet hues)
+├── Background Stars / Nebula Entity (Particle System)
+│
+├── Monad Entity (Top / Center)
+│   └── Pulsating Golden Core + Soft Glow
+│
+├── Treasury of Light Layer
+│   └── Multiple glowing "Mansions" / Treasuries (semi-transparent spheres)
+│
+├── 13th Aeon (Region of Righteousness)
+│   ├── Central Platform
+│   └── 24 Invisibles Syzygies
+│       ├── 12 Paired Entities (Male + Female)
+│       └── Each pair has subtle orbiting light connection
+│
+├── Twelve Aeons Layer (Lower)
+│   ├── Split into two groups (6 + 6)
+│   └── Visual distinction (more dense, slightly darker)
+│
+├── Sophia’s Realm
+│   ├── Descent Path (animated glowing trail)
+│   └── Redemption Ascent Path
+│
+└── Chaos / Lower Realms (Bottom)
+    └── Darker, more turbulent particle effects
+
+###Key RealityKit Components**
+- Main Scene: CosmologyScene.swift
+- Camera Controller: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
+- Entity Manager: CosmologyEntityManager — handles showing/hiding layers, animations, and state
+- Interaction System: Tap gestures on syzygies → show detail sheet
+- Animation System:
+Gentle pulsing on divine entities
+Flowing light trails for ascent/descent paths
+Particle systems for divine light and chaos
+- Interaction Design
+Pinch to Zoom — Move between cosmic layers
+Tap on Syzygy — Opens detail view with information about that divine pair
+Long Press on Layer — Brief description tooltip
+Haptic Feedback on important interactions
+VoiceOver Support for accessibility
+- Performance Considerations
+Use Level of Detail (LOD) for distant entities
+Occlusion culling
+Lazy loading of high-detail models
+Separate lightweight mode for older devices
+- Data Integration
+Content (names, descriptions, images) loaded from Sanity CMS
+User progress (visited layers, favorite syzygies) saved in Supabase
+
+
+
 ## High-Level Architecture
 
 ### Current State (May 2026)
