@@ -1,0 +1,42 @@
+# .gitattributes
+#
+# Helps Git handle Xcode project files more intelligently.
+# Particularly useful when you (or an AI) make changes via terminal
+# while Xcode is open.
+
+# === Xcode project files - use union merge strategy ===
+# This tells git to combine changes from both sides instead of
+# creating a conflict when possible. Reduces (but does not eliminate)
+# annoying pbxproj / workspace merge conflicts.
+*.pbxproj     merge=union
+*.xcscheme    merge=union
+*.xcworkspacedata merge=union
+
+# === Treat these as text for better diffing ===
+*.swift       diff=swift
+*.md          diff=markdown
+*.json        diff=json
+
+# === Binary files (never attempt to merge or show diffs) ===
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.pdf         binary
+*.mov         binary
+*.mp4         binary
+
+# === Line ending normalization (macOS is LF) ===
+*.swift       text=auto eol=lf
+*.h           text=auto eol=lf
+*.m           text=auto eol=lf
+*.mm          text=auto eol=lf
+*.c           text=auto eol=lf
+*.cpp         text=auto eol=lf
+*.h           text=auto eol=lf
+*.md          text=auto eol=lf
+*.yml         text=auto eol=lf
+*.yaml        text=auto eol=lf
+*.json        text=auto eol=lf
+*.xml         text=auto eol=lf
+*.plist       text=auto eol=lf
+*.strings     text=auto eol=lf

@@ -1,23 +1,29 @@
 # Xcode
 #
-# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+# Enhanced .gitignore for better Git + Xcode coexistence
+# Especially useful when doing git work in terminal while Xcode is open
 
-## User settings
+## === High-priority user & workspace state (most common source of "modified by another app" warnings) ===
 xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/xcschemes/xcschemamanagement.plist
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
 
-## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
-*.xcscmblueprint
-*.xccheckout
-
-## compatibility with Xcode 2 and earlier (ignoring not required starting Xcode 9)
-*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
-
-## Build artifacts
+## === Build artifacts & caches ===
 build/
 DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
 
-## Various data
-*.moved-aside
+## === Legacy Xcode user files (pre-Xcode 9) ===
+*.xcscmblueprint
+*.xccheckout
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+
+## === Old per-user files (very old Xcode) ===
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -26,46 +32,41 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-
-## Other
 *.xcuserstate
 
-# Swift Package Manager
+## === Swift Package Manager ===
 .build/
+.swiftpm/
+.swiftpm/configuration
+.swiftpm/xcode/package.xcworkspace/
+Package.resolved
 
-# CocoaPods
+## === Dependency managers ===
 Pods/
-
-# Carthage
 Carthage/Build/
+Carthage/Checkouts/
 
-# fastlane
+## === Fastlane ===
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# Code Injection
+## === Code injection / development tools ===
 iOSInjectionProject/
 
-# macOS
+## === macOS / general ===
 .DS_Store
+*.moved-aside
+*.symbols
+*AppStoreConnect*
 
-# Archives
-*.xcarchive
-
-# Playgrounds
+## === Playgrounds ===
 timeline.xctimeline
 playground.xcworkspace
 
-# Swift Package Manager
-.swiftpm/configuration
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.swiftpm/xcode/package.xcworkspace/xcshareddata/
+## === Archives & distribution ===
+*.xcarchive
 
-# Symbolication
-*.symbols
-
-# App Store Connect
-*AppStoreConnect*
-
+# Note: If you use XcodeGen or Tuist in the future, you may want to ignore
+# the generated .xcodeproj and .xcworkspace folders (except for shared data).
