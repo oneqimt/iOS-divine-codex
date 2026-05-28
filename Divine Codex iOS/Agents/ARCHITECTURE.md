@@ -18,13 +18,20 @@ The iOS app is a spiritual and technical counterpart to the Next.js web experien
 
 ## Tech Stack
 
-- **SwiftUI** (primary UI framework, iOS 17+)
+- **SwiftUI** (primary UI framework, targeting iOS 26.5)
+- **Liquid Class** – foundational design system / component layer used throughout the app for consistent fluid, glass-like, and mystical UI language
 - **RealityKit** + **ARKit** (planned for the interactive 3D/immersive Cosmology Explorer)
 - **Swift Concurrency** (async/await, actors)
 - **SwiftData** or **Core Data** (future local persistence for favorites, progress, notes)
 - **Keychain** / **CryptoKit** for secure token storage
 - **WidgetKit** (future: contemplative daily reflection widgets)
 - **App Intents** / Siri (future: voice-guided journeys)
+
+## Platform & Design System
+
+- **Deployment Target**: iOS 26.5
+- **Liquid Class**: The core visual and interaction foundation used consistently across all screens and components. This provides the fluid, liquid-like behavior, glassmorphism, and sacred aesthetic that defines the app’s experience.
+- All major UI elements (buttons, cards, backgrounds, transitions, navigation) are built on or styled through Liquid Class rather than using raw SwiftUI modifiers directly. This ensures visual and spiritual coherence.
 
 ## High-Level Architecture
 
