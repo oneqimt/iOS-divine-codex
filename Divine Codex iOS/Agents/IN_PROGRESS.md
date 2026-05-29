@@ -62,11 +62,18 @@
 - Current Sanity token is being rotated (was used across projects).
 - Proper secret management approach still needs to be decided (e.g. `Secrets.xcconfig`, build settings, etc.).
 
+## Sanity Setup Status
+
+- New personal Organization created for Divine Codex (separate billing from client project).
+- Project created inside the new Organization.
+- Currently on Free tier.
+- Next step: Create Sanity Studio (user will reach out when ready for help).
+
 ## Next Session Priorities
 
-- Build and style the real custom Liquid Glass TabBarView (based on the component shared)
-- Wire up the TabBar into HomeView (replace the current placeholder)
-- Implement tab selection logic and navigation to the respective views (ExplorerView, Search, Settings, etc.)
-- Continue refining device/orientation strategy as needed
+- Create Sanity Studio for the new Divine Codex project (user will request help when ready).
+- Once Studio is set up, begin defining initial content schema (especially for the Cosmology Explorer).
+- Build and style the real custom Liquid Glass TabBarView.
+- Wire up the TabBar into HomeView and implement basic navigation.
 
 
