@@ -12,9 +12,11 @@
 - **Geometry Reading**: Strong preference to avoid `GeometryReader`. Primary tool will be `.onGeometryChange` (iOS 18+), ideally centralized through managers.
 - **Design System**: Using "Liquid Glass" as the foundational UI language throughout the app.
 - **Navigation & Presentation Model**:
-  - HomeView acts as the central hub and will host the main menu (sidebar under consideration for iPad).
-  - The RealityKit Cosmology Explorer will **not** have its own menu.
-  - Explorer is launched from HomeView via `.fullScreenCover(isPresented: $showExplorer, onDismiss: { ... })` for maximum immersion.
+  - Main menu uses a custom Liquid Glass Tab Bar with 4 tabs: Home, Explorer, Search, Settings.
+  - Tapping the **Explorer** tab navigates to an intermediate `ExplorerView`.
+  - `ExplorerView` acts as a transitional, mood-setting screen that introduces the Cosmology Explorer and explains how to interact with it.
+  - The actual RealityKit Cosmology Scene is launched from *within* `ExplorerView` using `.fullScreenCover(isPresented:)`.
+  - The immersive 3D experience has no menu or persistent navigation.
 - **RealityKit Cosmology Explorer**: Early vision documented in ARCHITECTURE.md. Layered 3D representation of Gnostic cosmology is the heart of the app.
 - **Sanity Schema**: Still undecided. Current models in `Model/DivineCodex.swift` are generic placeholders. Expect refactoring once the schema is defined in Sanity Studio.
 
@@ -46,6 +48,7 @@
 - Added `secret.swift` (should remain untracked)
 - Improved git hygiene (`.gitignore`, `.gitattributes`, `bin/reset-xcode.sh`)
 - Began documenting in `ARCHITECTURE.md`
+- Created `ExplorerView.swift` as the transitional screen before launching the full-screen Cosmology Scene via `.fullScreenCover`
 
 ## Secrets / Environment Status
 

@@ -116,7 +116,11 @@ Root Entity (World Anchor)
 - **Entity Manager**: `CosmologyEntityManager` — responsible for showing/hiding layers, coordinating animations, and managing scene state
 - **Interaction System**: Tap gestures on entities (especially Syzygies) to surface detail information
 
-**Presentation**: The Cosmology Explorer will be presented as a full-screen immersive experience from HomeView using `.fullScreenCover`. It will not contain its own persistent menu or navigation chrome.
+**Presentation Model**:
+- Tapping the Explorer tab in the main menu navigates to an intermediate `ExplorerView`.
+- `ExplorerView` acts as a transitional, mood-setting screen that introduces the experience and explains interaction.
+- The actual RealityKit Cosmology Scene is launched from within `ExplorerView` using `.fullScreenCover(isPresented:)`.
+- Once inside the full-screen RealityKit experience, there is no menu or persistent navigation.
 
 ### Interaction & Navigation
 - Pinch to Zoom — Primary method for moving between cosmic layers
@@ -216,8 +220,10 @@ Divine Codex iOS/
    - Dark mode only (the cosmos is dark).
 
 5. **Navigation**:
-   - HomeView serves as the central hub / main menu (sidebar on iPad, adapted experience on iPhone).
-   - The RealityKit Cosmology Explorer is launched from HomeView as a fully immersive `.fullScreenCover`. It contains no persistent menu or navigation.
+   - Main menu uses a custom Liquid Glass Tab Bar with four destinations: Home, Explorer, Search, Settings.
+   - Tapping the Explorer tab navigates to an intermediate `ExplorerView` — a transitional, mood-setting screen with information about the experience.
+   - The actual RealityKit Cosmology Scene is launched from within `ExplorerView` using `.fullScreenCover`.
+   - The immersive Explorer experience contains no menu or persistent navigation.
    - Deep linking support planned for future "start a guided journey" from web or widgets.
    - Navigation patterns are still evolving and must respect the different orientation rules across device sizes.
 
