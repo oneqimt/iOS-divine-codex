@@ -111,7 +111,7 @@ Root Entity (World Anchor)
 ```
 
 ### Core Technical Components (Early Direction)
-- **Main Scene Controller**: `CosmologyScene.swift`
+- **Main Scene Controller**: `CosmoScene.swift`
 - **Camera System**: Smooth orbiting + zoom with gesture support (pan, pinch, double-tap to focus)
 - **Entity Manager**: `CosmologyEntityManager` — responsible for showing/hiding layers, coordinating animations, and managing scene state
 - **Interaction System**: Tap gestures on entities (especially Syzygies) to surface detail information

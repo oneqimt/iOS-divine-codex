@@ -1,107 +1,102 @@
-//
+///
 //  HomeView.swift
 //  Divine Codex iOS
+//
+//  Root navigation hub. Owns the selected tab and swaps the content view
+//  beneath a custom Liquid Glass tab bar.
 //
 //  Created by Dennis Miller on 5/28/26.
 //
 
 import SwiftUI
 
-/// The main entry point / hub for the app.
-/// 
-/// This view will eventually contain:
-/// - A sacred hero moment using the logo
-/// - Brief, contemplative copy
-/// - The custom Liquid Glass Tab Bar at the bottom
-/// - Navigation logic to other primary destinations (Explorer, Search, Settings)
-///
-/// Note: The Cosmology Explorer is not launched directly from here.
-/// Tapping the Explorer tab will first go to ExplorerView (a transitional screen),
-/// which then presents the full RealityKit experience via .fullScreenCover.
 struct HomeView: View {
-    
-    // Temporary state for the tab bar (will be replaced when we build the real TabBarView)
     @State private var selectedTab: MainTab = .home
-    
+
     var body: some View {
-        ZStack {
-            // Background - deep cosmic dark, aligned with Liquid Glass + website
-            Color.black
+        ZStack(alignment: .bottom) {
+            // Background lives at the root so every tab inherits the same mood.
+            Theme.Colors.background
                 .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Hero Area
-                VStack(spacing: 24) {
-                    Spacer()
-                    
-                    // Logo - using logo.jpg from Assets
-                    Image("logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 220)
-                        .padding(.horizontal, 40)
-                    
-                    VStack(spacing: 12) {
-                        Text("The Divine Codex")
-                            .font(.largeTitle)
-                            .fontWeight(.light)
-                            .foregroundStyle(.white)
-                        
-                        Text("Ancient wisdom reawakened.")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                    Spacer()
+
+            // Content area — swaps based on the selected tab.
+            Group {
+                switch selectedTab {
+                case .home:     HomeContentView()
+                case .explorer: ExplorerView()
+                case .search:   SearchView()
+                case .settings: SettingsView()
                 }
-                
-                // Tab Bar Placeholder
-                // This will be replaced with the real custom Liquid Glass TabBarView
-                TabBarPlaceholder(selectedTab: $selectedTab)
-                    .padding(.bottom, 8)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Leave room so content isn't hidden beneath the floating tab bar.
+            .safeAreaPadding(.bottom, 88)
+
+            // The custom Liquid Glass tab bar floats above content.
+            TabBarView(selectedTab: $selectedTab)
+                .padding(.bottom, 8)
         }
     }
 }
 
-// Temporary placeholder for the tab bar while we build the real one
-private struct TabBarPlaceholder: View {
-    @Binding var selectedTab: MainTab
-    
+// MARK: - Home tab content
+
+/// The Home tab: a full-bleed sacred image with the tagline anchored at the
+/// bottom above the floating tab bar.
+///
+/// Layout strategy:
+/// - The image uses `.scaledToFill()` + `.ignoresSafeArea()` so it covers the
+///   full screen on every device and orientation. The artwork is expected to
+///   bake in its own safe-zone padding so critical typography is never clipped
+///   by device bezels or rounded corners.
+/// - A bottom-up scrim keeps the tagline legible over bright regions of the
+///   artwork.
+/// - The tagline respects the safe area; the parent (`HomeView`) reserves
+///   room beneath it for the floating tab bar.
+private struct HomeContentView: View {
     var body: some View {
-        HStack {
-            ForEach(MainTab.allCases, id: \.self) { tab in
-                Button {
-                    selectedTab = tab
-                    // Click handlers will be wired up after the real TabBar is built
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: tab.iconName)
-                            .font(.system(size: 20))
-                        Text(tab.title)
-                            .font(.caption2)
-                    }
-                    .foregroundStyle(selectedTab == tab ? .white : .secondary)
-                    .frame(maxWidth: .infinity)
-                }
-            }
+        ZStack(alignment: .bottom) {
+            // Full-bleed sacred imagery, center-cropped.
+            Image("logo")
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
+
+            // Subtle scrim so the tagline stays legible over bright areas.
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.0),
+                    .black.opacity(0.35),
+                    .black.opacity(0.75)
+                ],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+
+            // Tagline anchored at the bottom of the content area.
+            Text("Ancient wisdom reawakened.")
+                .sacredSubtitle()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Theme.Spacing.lg)
+                .padding(.bottom, Theme.Spacing.lg)
+                .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal, 16)
     }
 }
+
+// MARK: - MainTab
 
 enum MainTab: CaseIterable {
     case home
     case explorer
     case search
     case settings
-    
+
     var title: String {
         switch self {
         case .home:     return "Home"
@@ -110,7 +105,7 @@ enum MainTab: CaseIterable {
         case .settings: return "Settings"
         }
     }
-    
+
     var iconName: String {
         switch self {
         case .home:     return "house.fill"
@@ -121,6 +116,17 @@ enum MainTab: CaseIterable {
     }
 }
 
-#Preview {
+#Preview("iPhone Portrait") {
+    HomeView()
+}
+
+#Preview("iPhone Landscape", traits: .landscapeLeft) {
+    HomeView()
+}
+
+// Note: To preview on a specific device (e.g. iPad), use the device picker
+// at the bottom of the Xcode Canvas. `.previewDevice(_:)` is ignored inside
+// the `#Preview` macro.
+#Preview("iPad") {
     HomeView()
 }

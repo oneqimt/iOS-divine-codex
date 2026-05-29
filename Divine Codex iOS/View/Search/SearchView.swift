@@ -1,19 +1,21 @@
 //
-//  SettingsView.swift
+//  SearchView.swift
 //  Divine Codex iOS
 //
-//  Created by Dennis Miller on 5/28/26.
+//  Placeholder for the Search tab. Real implementation TBD.
+//
+//  Created by Dennis Miller on 5/29/26.
 //
 
 import SwiftUI
 
-struct SettingsView: View {
+struct SearchView: View {
     var body: some View {
         VStack(spacing: Theme.Spacing.md) {
             Spacer()
-            Text("Settings")
+            Text("Search")
                 .sacredHeading()
-            Text("Tune your journey.")
+            Text("Seek and ye shall find.")
                 .sacredSubtitle()
             Spacer()
         }
@@ -21,6 +23,6 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    SearchView()
         .sacredBackground()
 }
