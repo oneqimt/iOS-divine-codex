@@ -27,9 +27,9 @@ struct TabBarView: View {
             //    but no longer reading as neutral gray.
             .background(
                 Capsule()
-                    .fill(Color.black.opacity(0.85 ))
+                    .fill(Color.black.opacity(0.45 ))
             )
-            .glassEffect(.regular, in: .capsule)
+            .glassEffect(.clear, in: .capsule)
         }
         .padding(.horizontal, Theme.Spacing.md)
     }

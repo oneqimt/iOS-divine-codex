@@ -8,5 +8,5 @@
 import Foundation
 
 
-let IMAGE_NAMES : [String] = ["monad-emanation.jpg","monad-eye-refined.jpg","monad-source.jpg","logo.jpg", "icon.png"]
+let IMAGE_NAMES : [String] = ["monad-emanation.jpg","monad-eye-refined.jpg","monad-source.jpg","logo.png", "icon.png"]
 

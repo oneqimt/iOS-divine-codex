@@ -45,26 +45,17 @@ struct HomeView: View {
 /// bottom above the floating tab bar.
 ///
 /// Layout strategy:
-/// - The image uses `.scaledToFill()` + `.ignoresSafeArea()` so it covers the
-///   full screen on every device and orientation. The artwork is expected to
-///   bake in its own safe-zone padding so critical typography is never clipped
-///   by device bezels or rounded corners.
-/// - A bottom-up scrim keeps the tagline legible over bright regions of the
-///   artwork.
-/// - The tagline respects the safe area; the parent (`HomeView`) reserves
-///   room beneath it for the floating tab bar.
+/// - The image is rendered as a `.background` layer with `.ignoresSafeArea()`
+///   so it centers against the **true screen bounds**, not against the
+///   shrunken content area that `HomeView`'s `.safeAreaPadding(.bottom, 88)`
+///   produces. This guarantees the artwork is visually centered on every
+///   device.
+/// - A bottom-up scrim keeps the tagline legible over bright regions.
+/// - The tagline respects the safe area; the parent reserves room beneath
+///   it for the floating tab bar.
 private struct HomeContentView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Full-bleed sacred imagery, center-cropped.
-            Image("logo")
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
-
             // Subtle scrim so the tagline stays legible over bright areas.
             LinearGradient(
                 colors: [
@@ -78,14 +69,26 @@ private struct HomeContentView: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
-            // Tagline anchored at the bottom of the content area.
+            // Tagline anchored above the floating tab bar.
             Text("Ancient wisdom reawakened.")
                 .sacredSubtitle()
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Theme.Spacing.lg)
-                .padding(.bottom, Theme.Spacing.lg)
+                .padding(.bottom, 130) // Clears the floating tab bar (~88pt) + breathing room
                 .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // The image lives in the background so it centers against the **true
+        // screen**, unaffected by the parent's `.safeAreaPadding(.bottom, 88)`.
+        .background {
+            Image("logo")
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                .clipped()
+                .accessibilityHidden(true)
+        }
+        .ignoresSafeArea()
     }
 }
 
