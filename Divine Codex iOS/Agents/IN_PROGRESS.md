@@ -52,6 +52,7 @@
 - Built initial HomeView skeleton (with logo + temporary tab bar placeholder)
 - Removed default ContentView boilerplate
 - Updated `Divine_Codex_iOSApp.swift` to use `HomeView` as the root view (no SplashView for now)
+- First successful build + run on simulator (HomeView displaying correctly)
 
 ## Secrets / Environment Status
 
@@ -63,9 +64,9 @@
 
 ## Next Session Priorities
 
-- Continue refining device/orientation strategy
-- Begin defining Sanity schema (or at least initial entities needed for the Cosmology Explorer)
-- Flesh out more of the RealityKit architecture
-- Decide on secret management solution for Sanity + other APIs
+- Build and style the real custom Liquid Glass TabBarView (based on the component shared)
+- Wire up the TabBar into HomeView (replace the current placeholder)
+- Implement tab selection logic and navigation to the respective views (ExplorerView, Search, Settings, etc.)
+- Continue refining device/orientation strategy as needed
 
 
