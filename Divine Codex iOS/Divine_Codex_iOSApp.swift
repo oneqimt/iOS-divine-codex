@@ -11,7 +11,14 @@ import SwiftUI
 struct Divine_Codex_iOSApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // Root view for the app.
+            // HomeView currently contains the main navigation (TabBar + content).
+            // 
+            // Future consideration:
+            // We may introduce a SplashView here if we need to initialize
+            // the Sanity client, load initial data, or perform other async setup
+            // before showing the main interface.
+            HomeView()
         }
     }
 }

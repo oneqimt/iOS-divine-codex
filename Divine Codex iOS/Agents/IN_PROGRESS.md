@@ -49,6 +49,9 @@
 - Improved git hygiene (`.gitignore`, `.gitattributes`, `bin/reset-xcode.sh`)
 - Began documenting in `ARCHITECTURE.md`
 - Created `ExplorerView.swift` as the transitional screen before launching the full-screen Cosmology Scene via `.fullScreenCover`
+- Built initial HomeView skeleton (with logo + temporary tab bar placeholder)
+- Removed default ContentView boilerplate
+- Updated `Divine_Codex_iOSApp.swift` to use `HomeView` as the root view (no SplashView for now)
 
 ## Secrets / Environment Status
 
