@@ -23,8 +23,8 @@
 ## Open Questions / Blockers
 
 - Final device/orientation rules and implementation approach (OrientationManager, DeviceMotionManager, ScreenSizeHelper)
-- Sanity content schema for the Cosmology Explorer
-- How content from Sanity will drive the RealityKit scene
+- How content from Sanity (especially emanations) will drive the RealityKit Cosmology Explorer scene
+- Exact fields needed on `emanation` vs `divineCodex` (will be refined once Studio is live)
 
 ## Important Context for Next Session
 
@@ -67,13 +67,32 @@
 - New personal Organization created for Divine Codex (separate billing from client project).
 - Project created inside the new Organization.
 - Currently on Free tier.
-- Next step: Create Sanity Studio (user will reach out when ready for help).
+- Next step: Create Sanity Studio (user will request help when ready).
+
+### Sanity Schema – Current Direction (First Iteration)
+
+**Core Documents:**
+- `divineCodex` → Primary flexible content document (editorial layer). This will be the main document used for most content and detail views.
+- `emanation` → First-class structural document. This represents the actual cosmological entities (Aeons, Syzygies, Treasury, Mysteries, etc.).
+
+**Key Decisions:**
+- `emanation` will be a document type (not a simple enum). It will have an `emanationType` reference (similar to the `religion` document pattern from the Sacred Sites project).
+- An `emanation` can declare properties for masculine/feminine (for Syzygies).
+- Explorer-specific fields (layerOrder, position, color, scale, isVisibleByDefault, etc.) will likely exist on both `divineCodex` and `emanation`.
+- Use standard Sanity `reference` fields for hierarchy (e.g. `parent` on emanation).
+- `divineCodex` will have a reference to `emanation` (this will drive the "aeon type" / entity association dropdown).
+
+**Notes:**
+- This is the first iteration. Refactoring is expected once we start building the RealityKit Cosmology Explorer and see real data needs.
+- Queries will live in ViewModels or a dedicated queries file (not scattered).
+- Mutations will be handled in CloudKit / Firebase, not Sanity.
+- Portable Text usage will be light (mainly detail views).
 
 ## Next Session Priorities
 
-- Create Sanity Studio for the new Divine Codex project (user will request help when ready).
-- Once Studio is set up, begin defining initial content schema (especially for the Cosmology Explorer).
+- User will create the Sanity Studio.
+- Once Studio is ready, collaborate on defining the initial schema (divineCodex + emanation documents + supporting types).
 - Build and style the real custom Liquid Glass TabBarView.
-- Wire up the TabBar into HomeView and implement basic navigation.
+- Wire up the TabBar into HomeView and implement basic navigation between Home / Explorer / Search / Settings.
 
 
