@@ -1,6 +1,6 @@
 ///
 //  HomeView.swift
-//  Divine Codex iOS
+//  Divine Codex
 //
 //  Root navigation hub. Owns the selected tab and swaps the content view
 //  beneath a custom Liquid Glass tab bar.
@@ -70,7 +70,7 @@ private struct HomeContentView: View {
             .allowsHitTesting(false)
 
             // Tagline anchored above the floating tab bar.
-            Text("Ancient wisdom reawakened.")
+            Text("Ancient wisdom reawakened")
                 .sacredSubtitle()
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Theme.Spacing.lg)
@@ -89,33 +89,6 @@ private struct HomeContentView: View {
                 .accessibilityHidden(true)
         }
         .ignoresSafeArea()
-    }
-}
-
-// MARK: - MainTab
-
-enum MainTab: CaseIterable {
-    case home
-    case explorer
-    case search
-    case settings
-
-    var title: String {
-        switch self {
-        case .home:     return "Home"
-        case .explorer: return "Explorer"
-        case .search:   return "Search"
-        case .settings: return "Settings"
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .home:     return "house.fill"
-        case .explorer: return "sparkles"
-        case .search:   return "magnifyingglass"
-        case .settings: return "gear"
-        }
     }
 }
 
