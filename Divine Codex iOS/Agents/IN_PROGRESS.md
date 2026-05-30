@@ -2,9 +2,40 @@
 
 > **Status**: Early Development  
 > **Last Updated**: May 30, 2026  
-> **Current Focus**: Foundational architecture + setup
+> **Current Focus**: Sanity content layer + view model architecture
 
 ## Current Session Focus
+
+**Wired up the DivineCodex fetch pipeline end-to-end** (May 30, 2026):
+
+- Established the foundational Sanity content layer with proper Swift 6 concurrency semantics.
+- Built a modern `@Observable` view model architecture.
+- Confirmed a working round-trip from GROQ query → typed Swift values, verified by console output of the two seeded codex documents (`The Call of the Vowels`, `The Restoration of Sophia`).
+
+**Models (`DivineCodex.swift`)**
+- Defined `Sendable` value-type models: `DivineCodex`, `Slug`, `SanityImage`, `AssetReference`, `PortableTextBlock`, `TextSpan`, `ImageSource`.
+- Added a `nonisolated` `Codable` conformance on `DivineCodex` via extension so it satisfies `T: Decodable & Sendable` from any isolation domain (including `@MainActor` callers).
+- Mapped Sanity's wire format to Swift property names via `CodingKeys` (`_id` → `id`, `body` → `description`).
+- Made `TextSpan.marks` optional to tolerate spans without marks, which Sanity omits rather than sending as `[]`.
+
+**View model (`SanityViewModel.swift`)**
+- Introduced `@Observable @MainActor SanityViewModel` with `codices`, `isLoading`, and `errorMessage` state.
+- Injected `SanityClientProtocol` for testability and preview-friendliness.
+- Implemented `fetchCodices()` with structured error handling and `OSLog` `Logger` output (privacy-annotated).
+
+**App composition (`Divine_Codex_iOSApp.swift`)**
+- Owned a single `SanityViewModel` as `@State` at the `App` level.
+- Injected it via the new typed `.environment(_:)` API for `@Observable` (no `EnvironmentObject`).
+- Constructed `SanityClient` with environment-appropriate CDN behavior (fresh in DEBUG, cached in RELEASE).
+- Kicked off an initial `fetchCodices()` smoke test from a root `.task`.
+
+**Views**
+- `ExplorerView` reads the view model via `@Environment(SanityViewModel.self)`.
+
+**Cleanup**
+- Removed duplicate model declarations that were causing redeclaration and ambiguity errors across the target.
+- Resolved a "Multiple commands produce `SanityClient.stringsdata`" build error caused by `SanityClient.swift` being listed twice in Compile Sources.
+
 
 ## Key Decisions & Rationale
 
@@ -42,6 +73,7 @@
   - Tech Stack (iOS 26.5 + SwiftUI + RealityKit)
 
 ## Recent Work / Changes
+- **DivineCodex fetch pipeline working end-to-end** (May 30, 2026): Sendable Codable models with Sanity key mappings, `@Observable` `@MainActor` `SanityViewModel` with injected `SanityClientProtocol`, and app-level environment composition driving an initial fetch on launch. Verified by console output of seeded codex documents. See "Current Session Focus" above for details.
 - **Sanity Studio foundation complete** (May 29, 2026): Full schema implemented + custom desk structure + seeded content. See detailed section below under "Sanity Schema – Actual Implementation".
 - Set up basic folder structure (`Model/`, `View/`, `Components/`, `Util/`, etc.)
 - Created initial `DivineCodex.swift` model (generic starting point)
@@ -145,9 +177,15 @@ These fields were explicitly designed to feed the RealityKit Cosmology Explorer.
 ## Next Session Priorities
 
 - **Sanity Studio is now live** with working schema and seeded content. Review the actual implementation section above.
+- **Render `sanity.codices` in `ExplorerView`** (or a dedicated list view) so real data drives the UI, not just console output.
+- **Remove the smoke-test `print` statements** from `fetchCodices()` once a view actually consumes `sanity.codices`. The `OSLog` `Logger` lines stay; the `print`s go.
+- **Move the `.task { await sanity.fetchCodices() }`** off `Divine_Codex_iOSApp` and onto whichever view first displays codices, so loading is coupled to need rather than launch.
+- **Grow the `DivineCodex` model deliberately**: Sanity payloads already include `shortDescription`, `keywords`, `explorer`, `primaryEmanation`, `relatedEmanations`, `frequencies`, `sources`, `publishedAt`, etc. Add fields only when a view needs them.
+- **Build a Portable Text renderer** — a small view that walks `[PortableTextBlock]` and styles spans by `marks`, ideally backed by `AttributedString`.
+- **Image loading via `AsyncImage`** once codices include images. `SanityImage` + `AssetReference` already model the asset ref; a URL builder (`https://cdn.sanity.io/images/{projectId}/{dataset}/{ref}`) is the missing piece.
+- **Add a Swift Testing target for `SanityViewModel`** — fake `SanityClientProtocol`, assert `fetchCodices()` populates `codices` on success and `errorMessage` on failure.
 - Collaborate on refining the schema as the RealityKit Cosmology Explorer is built (new explorer fields, additional relationships, etc.).
-- Begin defining GROQ queries and TypeScript models in the iOS app that consume `divineCodex`, `emanation`, and `frequency`.
-- Build and style the real custom Liquid Glass TabBarView.
-- Wire up the TabBar into HomeView and implement basic navigation between Home / Explorer / Search / Settings.
+- Build and style the real custom Liquid Glass `TabBarView`.
+- Wire up the TabBar into `HomeView` and implement basic navigation between Home / Explorer / Search / Settings.
 
 
