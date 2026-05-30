@@ -22,14 +22,11 @@ struct TabBarView: View {
                 }
             }
             .padding(6)
-            // 1) Solid translucent black sits *under* the glass.
-            // 2) The glass capsule refracts on top, keeping the highlights
-            //    but no longer reading as neutral gray.
             .background(
                 Capsule()
-                    .fill(Color.black.opacity(0.45 ))
+                    .fill(Color.black.opacity(0.45 )) // first knob
             )
-            .glassEffect(.clear, in: .capsule)
+            .glassEffect(.clear, in: .capsule)// second knob use clear!
         }
         .padding(.horizontal, Theme.Spacing.md)
     }

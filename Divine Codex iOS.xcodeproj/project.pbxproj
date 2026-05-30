@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		DBA9F03D2FC8B6E100D93F4A /* Divine Codex iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Divine Codex iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBA9F03D2FC8B6E100D93F4A /* Divine Codex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Divine Codex.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBA9F04A2FC8B6E300D93F4A /* Divine Codex iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Divine Codex iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBA9F0542FC8B6E300D93F4A /* Divine Codex iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Divine Codex iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		DBA9F03E2FC8B6E100D93F4A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DBA9F03D2FC8B6E100D93F4A /* Divine Codex iOS.app */,
+				DBA9F03D2FC8B6E100D93F4A /* Divine Codex.app */,
 				DBA9F04A2FC8B6E300D93F4A /* Divine Codex iOSTests.xctest */,
 				DBA9F0542FC8B6E300D93F4A /* Divine Codex iOSUITests.xctest */,
 			);
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		DBA9F03C2FC8B6E100D93F4A /* Divine Codex iOS */ = {
+		DBA9F03C2FC8B6E100D93F4A /* Divine Codex */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DBA9F05E2FC8B6E300D93F4A /* Build configuration list for PBXNativeTarget "Divine Codex iOS" */;
+			buildConfigurationList = DBA9F05E2FC8B6E300D93F4A /* Build configuration list for PBXNativeTarget "Divine Codex" */;
 			buildPhases = (
 				DBA9F0392FC8B6E100D93F4A /* Sources */,
 				DBA9F03A2FC8B6E100D93F4A /* Frameworks */,
@@ -110,11 +110,11 @@
 			fileSystemSynchronizedGroups = (
 				DBA9F03F2FC8B6E100D93F4A /* Divine Codex iOS */,
 			);
-			name = "Divine Codex iOS";
+			name = "Divine Codex";
 			packageProductDependencies = (
 			);
 			productName = "Divine Codex iOS";
-			productReference = DBA9F03D2FC8B6E100D93F4A /* Divine Codex iOS.app */;
+			productReference = DBA9F03D2FC8B6E100D93F4A /* Divine Codex.app */;
 			productType = "com.apple.product-type.application";
 		};
 		DBA9F0492FC8B6E300D93F4A /* Divine Codex iOSTests */ = {
@@ -200,7 +200,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				DBA9F03C2FC8B6E100D93F4A /* Divine Codex iOS */,
+				DBA9F03C2FC8B6E100D93F4A /* Divine Codex */,
 				DBA9F0492FC8B6E300D93F4A /* Divine Codex iOSTests */,
 				DBA9F0532FC8B6E300D93F4A /* Divine Codex iOSUITests */,
 			);
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		DBA9F04C2FC8B6E300D93F4A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = DBA9F03C2FC8B6E100D93F4A /* Divine Codex iOS */;
+			target = DBA9F03C2FC8B6E100D93F4A /* Divine Codex */;
 			targetProxy = DBA9F04B2FC8B6E300D93F4A /* PBXContainerItemProxy */;
 		};
 		DBA9F0562FC8B6E300D93F4A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = DBA9F03C2FC8B6E100D93F4A /* Divine Codex iOS */;
+			target = DBA9F03C2FC8B6E100D93F4A /* Divine Codex */;
 			targetProxy = DBA9F0552FC8B6E300D93F4A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -552,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DBA9F05E2FC8B6E300D93F4A /* Build configuration list for PBXNativeTarget "Divine Codex iOS" */ = {
+		DBA9F05E2FC8B6E300D93F4A /* Build configuration list for PBXNativeTarget "Divine Codex" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DBA9F05F2FC8B6E300D93F4A /* Debug */,
