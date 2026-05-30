@@ -12,6 +12,8 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab: MainTab = .home
+    @Environment(SanityViewModel.self) private var sanity
+    
 
     var body: some View {
         ZStack(alignment: .bottom) {

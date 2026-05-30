@@ -20,6 +20,8 @@ import SwiftUI
 ///
 /// From this view, the actual CosmologyScene is presented via `.fullScreenCover`.
 struct ExplorerView: View {
+    
+    @Environment(SanityViewModel.self) private var sanity
 
     @State private var showCosmologyScene = false
 
@@ -61,15 +63,19 @@ struct ExplorerView: View {
             .padding(.horizontal, Theme.Spacing.lg)
 
             Spacer()
-
-            // Launch button — Liquid Glass call to action
-            Button {
-                showCosmologyScene = true
-            } label: {
+            
+            Button(action: {
+                Task {
+                   await sanity.fetchCodices()
+                }
+            }) {
                 Text("Enter the Pleroma")
+                    .buttonStyle(PleromaButtonStyle())
+                    .padding(.horizontal, Theme.Spacing.xl)
+            
             }
-            .buttonStyle(PleromaButtonStyle())
-            .padding(.horizontal, Theme.Spacing.xl)
+            .padding()
+
         }
         .padding(.top, Theme.Spacing.lg)
         .fullScreenCover(isPresented: $showCosmologyScene) {

@@ -29,9 +29,22 @@
 		DBA9F0542FC8B6E300D93F4A /* Divine Codex iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Divine Codex iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DBA353512FCB806600C44122 /* Exceptions for "Divine Codex iOS" folder in "Divine Codex" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Util/SanityClient.swift,
+			);
+			target = DBA9F03C2FC8B6E100D93F4A /* Divine Codex */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DBA9F03F2FC8B6E100D93F4A /* Divine Codex iOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DBA353512FCB806600C44122 /* Exceptions for "Divine Codex iOS" folder in "Divine Codex" target */,
+			);
 			path = "Divine Codex iOS";
 			sourceTree = "<group>";
 		};
