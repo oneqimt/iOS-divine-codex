@@ -20,8 +20,13 @@ import SwiftUI
 ///
 /// From this view, the actual CosmologyScene is presented via `.fullScreenCover`.
 struct ExplorerView: View {
-    
+
     @Environment(SanityViewModel.self) private var sanity
+
+    /// Local view model for the explorer experience.
+    /// In a future pass we may move ownership higher (e.g. HomeView or App)
+    /// if we need to preserve state across tab switches.
+    @State private var explorerViewModel = ExplorerViewModel()
 
     @State private var showCosmologyScene = false
 
@@ -63,16 +68,15 @@ struct ExplorerView: View {
             .padding(.horizontal, Theme.Spacing.lg)
 
             Spacer()
-            
-            Button(action: {
-                Task {
-                   await sanity.fetchCodices()
-                }
-            }) {
+
+            Button {
+                // For now we enter the immersive scene directly.
+                // Later we may want a confirmation or loading step here.
+                showCosmologyScene = true
+            } label: {
                 Text("Enter the Pleroma")
                     .buttonStyle(PleromaButtonStyle())
                     .padding(.horizontal, Theme.Spacing.xl)
-            
             }
             .padding()
 
@@ -80,9 +84,11 @@ struct ExplorerView: View {
         .padding(.top, Theme.Spacing.lg)
         .fullScreenCover(isPresented: $showCosmologyScene) {
             CosmoScene()
+                .onAppear {
+                    explorerViewModel.didEnterImmersiveScene()
+                }
                 .onDisappear {
-                    // Good place for any cleanup or state reset
-                    // when leaving the immersive experience.
+                    explorerViewModel.didExitImmersiveScene()
                 }
         }
     }
