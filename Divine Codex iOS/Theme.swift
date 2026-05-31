@@ -16,7 +16,7 @@ import SwiftUI
 enum Theme {
 
     // MARK: Colors
-    // For colors you want to vary by light/dark mode, define them as Color Sets
+    // For colors that we want to vary by light/dark mode, define them as Color Sets
     // in Assets.xcassets and reference them with `Color("Name", bundle: .main)`.
     enum Colors {
         /// Deep cosmic background — the "void" behind the Pleroma.

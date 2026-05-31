@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import Divine_Codex_iOS
+@testable import Divine_Codex
 
 final class Divine_Codex_iOSTests: XCTestCase {
 

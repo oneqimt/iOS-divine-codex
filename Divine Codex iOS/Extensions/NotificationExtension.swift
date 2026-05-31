@@ -7,7 +7,7 @@
 
 import Foundation
 extension Notification.Name {
-    // refresh global Note example only
+    // refresh global Note: example only
     static let globalRefreshNeeded = Notification.Name("globalRefreshNeeded")
     
 }
