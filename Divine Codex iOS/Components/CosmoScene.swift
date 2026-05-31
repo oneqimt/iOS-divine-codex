@@ -14,16 +14,29 @@
 //
 //  ⚠️ See the RealityViewContent visibility warning inside the body below.
 
+// MARK: - The 24 Invisibles (Definition)
+//
+// The 24 Invisibles are twelve sacred syzygies (divine masculine + feminine pairs)
+// that dwell in the 13th Aeon, also called the Region of Righteousness.
+// They represent perfect divine balance and are a core part of the Gnostic
+// cosmology we are visualizing in this scene.
+//
+// In our current model they will eventually live under the "Aeon" layer
+// (specifically the 13th Aeon), with Barbelo and Sophia being two of the
+// most important individual emanations we surface from Sanity data.
+
 import SwiftUI
 import RealityKit
 import simd
 
 struct CosmoScene: View {
 
-    // For the initial integration phase we create a local view model.
-    // Once ExplorerView properly owns and injects one, we can switch to
-    // an @Environment or initializer parameter.
-    @State private var viewModel = ExplorerViewModel()
+    /// The explorer view model containing the combined local + server nodes.
+    /// Passed in from ExplorerView so we have access to the built node list.
+    let explorerViewModel: ExplorerViewModel
+
+    /// Access to server data (DivineCodex entries for Barbelo, Sophia, etc.)
+    @Environment(SanityViewModel.self) private var sanity
 
     // References to key entities so we can perform hit testing from gestures.
     @State private var rootEntity: Entity?
@@ -65,8 +78,9 @@ struct CosmoScene: View {
                             light.position = [0, 10, 0]
                             root.addChild(light)
 
-                            // Create entities from mock data
-                            for node in viewModel.nodes {
+                            // TEMP: Still rendering with old mock data while we migrate
+                            // to the new ExplorerNode system. We will bind real data next.
+                            for node in LocalCosmology.nodes {
                                 let entity = makeEntity(for: node)
                                 root.addChild(entity)
                             }
@@ -109,10 +123,23 @@ struct CosmoScene: View {
                 .safeAreaPadding(.top)
         }
         .onAppear {
-            viewModel.didEnterImmersiveScene()
+            explorerViewModel.didEnterImmersiveScene()
+
+            // TEMP: Log what we received from Sanity so we can see the data flowing.
+            // Later we will map these DivineCodex entries (especially Barbelo & Sophia)
+            // into the 3D scene alongside our local Monad / Pleroma / Aeon objects.
+            print("=== CosmoScene received \(sanity.codices.count) DivineCodex entries from Sanity ===")
+            for codex in sanity.codices {
+                print("  - \(codex.title ?? "Untitled")")
+            }
+
+            print("=== Explorer nodes in view model: \(explorerViewModel.nodes.count) ===")
+            for node in explorerViewModel.nodes {
+                print("  - \(node.name)")
+            }
         }
         .onDisappear {
-            viewModel.didExitImmersiveScene()
+            explorerViewModel.didExitImmersiveScene()
         }
     }
 
@@ -120,7 +147,7 @@ struct CosmoScene: View {
 
     private var closeButton: some View {
         Button {
-            viewModel.didExitImmersiveScene()
+            explorerViewModel.didExitImmersiveScene()
             dismiss()
         } label: {
             Image(systemName: "xmark")
@@ -211,14 +238,14 @@ struct CosmoScene: View {
         // Find the first hit that corresponds to one of our cosmic nodes.
         for hit in hits {
             if let component = hit.entity.components[MockNodeComponent.self],
-               let node = viewModel.nodes.first(where: { $0.id == component.nodeId }) {
+               let node = explorerViewModel.nodes.first(where: { $0.id == component.nodeId }) {
 
                 // Clear previous highlight
                 highlightedEntity?.scale = [1, 1, 1]
                 highlightedEntity = hit.entity
                 hit.entity.scale = [1.4, 1.4, 1.4]   // Simple "selected" pulse
 
-                viewModel.selectNode(node)
+                explorerViewModel.selectNode(node)
                 print("✓ Selected node: \(node.name) (id: \(node.id))")
                 return
             }
@@ -228,7 +255,7 @@ struct CosmoScene: View {
         highlightedEntity?.scale = [1, 1, 1]
         highlightedEntity = nil
 
-        viewModel.clearSelection()
+        explorerViewModel.clearSelection()
         print("— Cleared selection (tapped empty space)")
     }
 
@@ -292,6 +319,6 @@ private struct UnsupportedRealityKitView: View {
     }
 }
 
-#Preview {
-    CosmoScene()
-}
+//#Preview {
+//    CosmoScene()
+//}

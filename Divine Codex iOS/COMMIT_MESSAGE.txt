@@ -1,0 +1,21 @@
+feat(explorer): Introduce ExplorerNode + integrate local + Sanity cosmology data
+
+- Created dedicated local models for the upper cosmology:
+  - Monad, Pleroma, Aeon (with ExplorerVisuals for RealityKit positioning)
+- Added ExplorerNode enum as the unified type for the scene graph
+  (supports local types + DivineCodex from Sanity)
+- Refactored ExplorerViewModel to manage the combined hierarchy
+  (local top levels + server data via updateWithServerData)
+- Wired fetchCodices() on ExplorerView .onAppear (with error display)
+- Passed explorerViewModel into CosmoScene for future node rendering
+- Made DivineCodex + nested types and local models Equatable/Hashable
+  (required for SwiftUI .onChange and observation)
+- Added LocalCosmologySeeds for stable local data (Monad → Pleroma → Aeons)
+- Improved console logging in CosmoScene to observe data flow from Sanity
+
+This establishes the data foundation for rendering the real cosmology
+hierarchy (Monad → Pleroma → Aeon → Barbelo/Sophia/Invisibles) in the
+RealityKit Cosmology Explorer.
+
+Next up: Build pretty Liquid Glass Node components and bind ExplorerNode
+data to actual 3D entities + 2D overlays.

@@ -21,22 +21,9 @@
 import Foundation
 import simd
 
-// MARK: - Explorer Visuals (Temporary)
-
-/// Visualization hints for driving RealityKit entity creation in the Cosmology Explorer.
-/// This is scaffolding and will evolve with the real node model.
-struct ExplorerVisuals: Sendable, Hashable {
-    let layerOrder: Int
-    let position: SIMD3<Float>?
-    let colorHex: String?
-    let geometryHint: String?
-    let scale: Float?
-
-    /// Convenience for RealityKit (position as SIMD3<Float>).
-    var worldPosition: SIMD3<Float> {
-        position ?? .zero
-    }
-}
+// Note: ExplorerVisuals now lives in Model/ExplorerVisuals.swift as the
+// single source of truth for scene visualization data (used by both local
+// models and Sanity-backed content).
 
 // MARK: - Temporary Mock Node
 

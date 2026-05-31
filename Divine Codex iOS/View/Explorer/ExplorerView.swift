@@ -67,6 +67,15 @@ struct ExplorerView: View {
             }
             .padding(.horizontal, Theme.Spacing.lg)
 
+            // Error message from Sanity (if any)
+            if let error = sanity.errorMessage {
+                Text(error)
+                    .font(Theme.Fonts.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
             Spacer()
 
             Button {
@@ -82,8 +91,22 @@ struct ExplorerView: View {
 
         }
         .padding(.top, Theme.Spacing.lg)
+        .onAppear {
+            // Start loading Aeons / emanations (Barbelo, Sophia, etc.) from Sanity
+            // as soon as the user lands on the Explorer tab.
+            if sanity.codices.isEmpty && !sanity.isLoading {
+                Task {
+                    await sanity.fetchCodices()
+                }
+            }
+        }
+        .onChange(of: sanity.codices) { _, newCodices in
+            // When new data arrives from Sanity, push it into the explorer view model
+            // so it can build the combined node list (local + server).
+            explorerViewModel.updateWithServerData(newCodices)
+        }
         .fullScreenCover(isPresented: $showCosmologyScene) {
-            CosmoScene()
+            CosmoScene(explorerViewModel: explorerViewModel)
                 .onAppear {
                     explorerViewModel.didEnterImmersiveScene()
                 }

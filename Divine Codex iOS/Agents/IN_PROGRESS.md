@@ -1,8 +1,23 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: May 30, 2026  
-> **Current Focus**: Sanity content layer + view model architecture
+> **Last Updated**: June 2026  
+> **Current Focus**: ExplorerNode data model + integration of local + Sanity cosmology data
+
+## Current Session Focus (June 2026)
+
+**Explorer data modeling & integration**
+
+- Introduced first-class local models for the upper cosmology: `Monad`, `Pleroma`, and `Aeon` (all with `ExplorerVisuals` for RealityKit placement and styling).
+- Created `ExplorerNode` (enum) as the unified representation for the scene graph — capable of holding both local stable data and dynamic `DivineCodex` entries from Sanity (Barbelo, Sophia, other Invisibles).
+- Refactored `ExplorerViewModel` to own a `[ExplorerNode]` list and merge local hierarchy with server data via `updateWithServerData(_:)`.
+- Wired `fetchCodices()` to trigger on `ExplorerView.onAppear` (with basic error message display in the UI).
+- Passed the `explorerViewModel` into `CosmoScene` (preparing for real data-driven rendering).
+- Made `DivineCodex` + all nested types, plus the new local models, conform to `Equatable` + `Hashable` (required for SwiftUI observation and `.onChange`).
+- Added `LocalCosmologySeeds` as the source of truth for stable local top-level data (Monad → Pleroma → Aeons).
+- Added diagnostic logging in `CosmoScene.onAppear` so we can see both raw Sanity data and the combined `ExplorerNode` list.
+
+This work establishes the proper data foundation for the Cosmology Explorer scene while keeping the upper cosmology (Monad / Pleroma / Aeons) as stable local data.
 
 ## Current Session Focus
 
@@ -176,6 +191,9 @@ These fields were explicitly designed to feed the RealityKit Cosmology Explorer.
 
 ## Next Session Priorities
 
+- **Build pretty Liquid Glass Node components** — Create `Components/Node.swift` (and supporting views) that render `ExplorerNode` data beautifully using the app's Liquid Glass design language. This will be used both in 2D overlays and as the visual representation layer for the 3D scene.
+- **Bind ExplorerNode data to the RealityKit scene** — Update `CosmoScene` to create entities from the new `ExplorerNode` list (instead of old `MockCosmicNode` mocks). Use `explorer` visuals from local models + map explorer data from `DivineCodex`.
+- **Improve hierarchy merging** — Make `ExplorerViewModel.updateWithServerData` smarter about where Sanity entries (Barbelo, Sophia, Invisibles) should attach in the tree (under specific Aeons).
 - **Sanity Studio is now live** with working schema and seeded content. Review the actual implementation section above.
 - **Render `sanity.codices` in `ExplorerView`** (or a dedicated list view) so real data drives the UI, not just console output.
 - **Remove the smoke-test `print` statements** from `fetchCodices()` once a view actually consumes `sanity.codices`. The `OSLog` `Logger` lines stay; the `print`s go.

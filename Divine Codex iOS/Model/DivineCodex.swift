@@ -15,7 +15,7 @@ import Foundation
 // `@MainActor` view models) can use it to satisfy `Sendable`-constrained
 // generics like `SanityClient.fetch(query:as:)`.
 
-struct DivineCodex: Identifiable, Sendable {
+struct DivineCodex: Identifiable, Sendable, Equatable, Hashable {
     let id: String
     let title: String?
     let slug: Slug
@@ -31,7 +31,7 @@ struct DivineCodex: Identifiable, Sendable {
     }
 }
 
-struct Slug: Codable, Sendable {
+struct Slug: Codable, Sendable, Equatable, Hashable {
     let current: String
     let type: String?
 
@@ -41,12 +41,12 @@ struct Slug: Codable, Sendable {
     }
 }
 
-struct SanityImage: Codable, Sendable {
+struct SanityImage: Codable, Sendable, Equatable, Hashable {
     let asset: AssetReference
     let caption: String?
 }
 
-struct AssetReference: Codable, Sendable {
+struct AssetReference: Codable, Sendable, Equatable, Hashable {
     let _ref: String
 
     enum CodingKeys: String, CodingKey {
@@ -54,7 +54,7 @@ struct AssetReference: Codable, Sendable {
     }
 }
 
-struct PortableTextBlock: Codable, Sendable {
+struct PortableTextBlock: Codable, Sendable, Equatable, Hashable {
     let _type: String
     let style: String?
     let children: [TextSpan]?
@@ -72,7 +72,7 @@ struct PortableTextBlock: Codable, Sendable {
     }
 }
 
-struct TextSpan: Codable, Sendable {
+struct TextSpan: Codable, Sendable, Equatable, Hashable {
     let _type: String
     let text: String
     let marks: [String]?   // ✅ optional, since Sanity omits when empty
