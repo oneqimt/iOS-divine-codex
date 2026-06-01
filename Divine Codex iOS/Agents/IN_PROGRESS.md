@@ -1,8 +1,28 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 1, 2026 (button styling & visual testing)  
-> **Current Focus**: ExplorerNodeButton styling with Liquid Glass + temporary visual testing in CosmoScene
+> **Last Updated**: June 2, 2026 (CosmoScene stabilization, camera focus, NodeLabelView)  
+> **Current Focus**: CosmoScene refactoring + camera focus system + reusable NodeLabelView + interaction refinements
+
+## Current Session Focus (June 2, 2026)
+
+**CosmoScene stabilization, camera focus, and component work**
+
+- Performed major cleanup and structural repair of `CosmoScene.swift` after extensive refactoring.
+- Fully integrated the modern `ExplorerViewModel` + `ExplorerNode` data model into the 3D scene (replacing old mock `LocalCosmology` data).
+- Implemented smooth camera focus animation when selecting nodes, using stable framing that preserves scene context.
+- Added single-node visual emphasis (smooth scale) on the focused entity only.
+- Refined 3D tap interaction model:
+  - Tapping the currently focused node toggles it off and returns the camera to the default overview.
+  - Tapping a different node while focused first returns the camera to the default state (important preparation for future panning).
+- Created reusable `NodeLabelView` component for displaying node titles.
+- Updated `ExplorerNodeButton` to use `NodeLabelView` and aligned its Liquid Glass styling with the TabBarView pattern (using `GlassEffectContainer`).
+- Began integration of node labels into the 3D scene via a reliable 2D overlay + projection approach.
+- Fixed numerous compilation and view hierarchy issues introduced during heavy editing.
+
+This work brings `CosmoScene` to a stable, modern foundation using the real data model. The camera focus and interaction rules are now solid in preparation for adding manual panning/orbit controls and the detail card + leader line UI.
+
+---
 
 ## Current Session Focus (June 1, 2026)
 
