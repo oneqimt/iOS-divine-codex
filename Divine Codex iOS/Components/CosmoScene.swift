@@ -51,67 +51,59 @@ struct CosmoScene: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             // Main immersive content (full bleed)
-            Group {
-                if RealityKitSupport.isSupported {
-                    // IMPORTANT: RealityViewContent Visibility Gotcha
-                    //
-                    // Do NOT reference RealityViewContent (or similar RealityView* types)
-                    // outside of the RealityView closure at the top level of this file.
-                    //
-                    // In some Xcode / SDK combinations the symbol is not visible until
-                    // you are inside the closure after importing RealityKit. Explicitly
-                    // typing the parameter or using it in a helper function signature
-                    // can produce "Cannot find RealityViewContent" errors.
-                    //
-                    // This is why all scene construction currently lives directly
-                    // inside `RealityView { content in ... }` instead of being extracted
-                    // into a separate setup function.
-                    GeometryReader { geometry in
-                        RealityView { content in
-                            // Root entity
-                            let root = Entity()
-                            root.name = "CosmologyRoot"
+            // Using black background for now to better evaluate Liquid Glass effects
+            ZStack {
+                Color.black.ignoresSafeArea()
 
-                            // Basic lighting
-                            let light = DirectionalLight()
-                            light.light.intensity = 1200
-                            light.position = [0, 10, 0]
-                            root.addChild(light)
+                Group {
+                    if RealityKitSupport.isSupported {
+                        GeometryReader { geometry in
+                            RealityView { content in
+                                // Root entity
+                                let root = Entity()
+                                root.name = "CosmologyRoot"
 
-                            // TEMP: Still rendering with old mock data while we migrate
-                            // to the new ExplorerNode system. We will bind real data next.
-                            for node in LocalCosmology.nodes {
-                                let entity = makeEntity(for: node)
-                                root.addChild(entity)
-                            }
+                                // Basic lighting
+                                let light = DirectionalLight()
+                                light.light.intensity = 1200
+                                light.position = [0, 10, 0]
+                                root.addChild(light)
 
-                            content.add(root)
-
-                            // Custom camera entity (gives us control later for map-style navigation)
-                            let camera = PerspectiveCamera()
-                            camera.position = SIMD3<Float>(0, 8, 18)
-                            camera.look(at: SIMD3<Float>(0, 4, 0),
-                                        from: camera.position,
-                                        relativeTo: nil)
-                            content.add(camera)
-
-                            // Store references for hit testing from gestures.
-                            // We dispatch to main to avoid modifying state during the make closure.
-                            DispatchQueue.main.async {
-                                rootEntity = root
-                                cameraEntity = camera
-                            }
-                        }
-                        .gesture(
-                            SpatialTapGesture()
-                                .onEnded { value in
-                                    let tapLocation = value.location
-                                    handleTap(at: tapLocation, in: geometry.size)
+                                // TEMP: Still rendering with old mock data while we migrate
+                                // to the new ExplorerNode system. We will bind real data next.
+                                for node in LocalCosmology.nodes {
+                                    let entity = makeEntity(for: node)
+                                    root.addChild(entity)
                                 }
-                        )
+
+                                content.add(root)
+
+                                // Custom camera entity (gives us control later for map-style navigation)
+                                let camera = PerspectiveCamera()
+                                camera.position = SIMD3<Float>(0, 8, 18)
+                                camera.look(at: SIMD3<Float>(0, 4, 0),
+                                            from: camera.position,
+                                            relativeTo: nil)
+                                content.add(camera)
+
+                                // Store references for hit testing from gestures.
+                                // We dispatch to main to avoid modifying state during the make closure.
+                                DispatchQueue.main.async {
+                                    rootEntity = root
+                                    cameraEntity = camera
+                                }
+                            }
+                            .gesture(
+                                SpatialTapGesture()
+                                    .onEnded { value in
+                                        let tapLocation = value.location
+                                        handleTap(at: tapLocation, in: geometry.size)
+                                    }
+                            )
+                        }
+                    } else {
+                        UnsupportedRealityKitView()
                     }
-                } else {
-                    UnsupportedRealityKitView()
                 }
             }
             .ignoresSafeArea()
@@ -121,22 +113,45 @@ struct CosmoScene: View {
                 .padding(.top, 8)
                 .padding(.trailing, 20)
                 .safeAreaPadding(.top)
+
+            // TEMPORARY: Buttons for visual testing of ExplorerNodeButton on the black canvas.
+            // This lets us evaluate the Liquid Glass styling in the actual running context.
+            VStack {
+                Spacer()
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ExplorerNodeButton(
+                            node: .monad(LocalCosmologySeeds.monad),
+                            isSelected: false,
+                            action: { print("Tapped: Monad") }
+                        )
+
+                        ExplorerNodeButton(
+                            node: .pleroma(LocalCosmologySeeds.pleroma),
+                            isSelected: true,
+                            action: { print("Tapped: Pleroma") }
+                        )
+
+                        if let firstAeon = LocalCosmologySeeds.aeons.first {
+                            ExplorerNodeButton(
+                                node: .aeon(firstAeon),
+                                isSelected: false,
+                                action: { print("Tapped: \(firstAeon.name)") }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 60)
+                }
+            }
         }
         .onAppear {
             explorerViewModel.didEnterImmersiveScene()
 
-            // TEMP: Log what we received from Sanity so we can see the data flowing.
-            // Later we will map these DivineCodex entries (especially Barbelo & Sophia)
-            // into the 3D scene alongside our local Monad / Pleroma / Aeon objects.
-            print("=== CosmoScene received \(sanity.codices.count) DivineCodex entries from Sanity ===")
-            for codex in sanity.codices {
-                print("  - \(codex.title ?? "Untitled")")
-            }
-
-            print("=== Explorer nodes in view model: \(explorerViewModel.nodes.count) ===")
-            for node in explorerViewModel.nodes {
-                print("  - \(node.name)")
-            }
+            // Debug logging for data flow (can be removed later)
+            print("Sanity codices count: \(sanity.codices.count)")
+            print("ExplorerViewModel nodes count: \(explorerViewModel.nodes.count)")
         }
         .onDisappear {
             explorerViewModel.didExitImmersiveScene()

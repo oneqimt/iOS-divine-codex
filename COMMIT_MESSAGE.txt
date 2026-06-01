@@ -1,0 +1,11 @@
+style(explorer): Refine ExplorerNodeButton with Liquid Glass and add temporary visual test in CosmoScene
+
+- Renamed component to ExplorerNodeButton for clarity and to avoid potential name collisions.
+- Simplified button to show only the title (short description reserved for future detail overlay/popup).
+- Applied Liquid Glass styling using Capsule + .glassEffect(.clear, in: .capsule) with black fill and gold selection state, matching the TabBar aesthetic.
+- Temporarily added a horizontal test row of ExplorerNodeButtons (using local seeds) directly in CosmoScene on black background for real-time visual evaluation in the running app.
+- Cleaned up outdated placeholder comments and test code.
+
+This gives a working, attractive button component ready for integration into the explorer UI and 3D scene overlays.
+
+Next: Proper data binding of ExplorerNode list + canvas styling for the full Cosmology Explorer experience.

@@ -2,16 +2,11 @@
 //  ExplorerNodeButton.swift
 //  Divine Codex iOS
 //
-//  A beautiful, tappable Liquid Glass "node" button used in the Cosmology Explorer.
+//  A beautiful, tappable Liquid Glass button representing a node in the
+//  Cosmology Explorer (Monad, Pleroma, Aeons, Barbelo, Sophia, Invisibles, etc.).
 //
-//  These represent the different points in the hierarchy:
-//  - Monad, Pleroma, Aeons (local)
-//  - Barbelo, Sophia, and the other Invisibles (from Sanity)
-//
-//  This is intentionally designed as an interactive button (similar to
-//  CompactOptionButton patterns) rather than a passive card. It supports
-//  selection state and will be used both in 2D overlays and potentially
-//  as 2D representations floating in/near the 3D scene.
+//  Currently shows only the title. The short description will be used in
+//  the detail overlay/popup when a node is selected.
 //
 
 import SwiftUI
@@ -23,35 +18,26 @@ struct ExplorerNodeButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(node.name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(isSelected ? Theme.Colors.background : Theme.Colors.primaryText)
-
-                if let shortDesc = node.shortDescription, !shortDesc.isEmpty {
-                    Text(shortDesc)
-                        .font(.system(size: 11))
-                        .foregroundStyle(isSelected ? Theme.Colors.background.opacity(0.7) : Theme.Colors.secondaryText)
-                        .lineLimit(2)
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? Theme.Colors.divineGold : Color.white.opacity(0.08))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(
-                        isSelected ? Theme.Colors.divineGold.opacity(0.6) : Color.white.opacity(0.15),
-                        lineWidth: 1
-                    )
-            )
+            Text(node.name)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(isSelected ? Theme.Colors.background : Theme.Colors.primaryText)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 9)
         }
-        .scaleEffect(isSelected ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.18), value: isSelected)
+        .background(
+            Capsule()
+                .fill(isSelected ? Theme.Colors.divineGold : Color.black.opacity(0.10))
+        )
+        .glassEffect(.clear, in: .capsule)
+        .overlay(
+            Capsule()
+                .stroke(
+                    isSelected ? Theme.Colors.divineGold.opacity(0.5) : Color.white.opacity(0.12),
+                    lineWidth: 1
+                )
+        )
+        .scaleEffect(isSelected ? 1.03 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
 }
 
@@ -64,7 +50,7 @@ struct ExplorerNodeButton: View {
         action: {}
     )
     .padding()
-    .sacredBackground()
+    .background(Color.black)
 }
 
 #Preview("Selected") {
@@ -74,5 +60,5 @@ struct ExplorerNodeButton: View {
         action: {}
     )
     .padding()
-    .sacredBackground()
+    .background(Color.black)
 }

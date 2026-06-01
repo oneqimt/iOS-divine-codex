@@ -1,8 +1,8 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 2026  
-> **Current Focus**: ExplorerNode data model + integration of local + Sanity cosmology data
+> **Last Updated**: June 2026 (button styling & visual testing)  
+> **Current Focus**: ExplorerNodeButton styling with Liquid Glass + temporary visual testing in CosmoScene
 
 ## Current Session Focus (June 2026)
 
@@ -18,6 +18,16 @@
 - Added diagnostic logging in `CosmoScene.onAppear` so we can see both raw Sanity data and the combined `ExplorerNode` list.
 
 This work establishes the proper data foundation for the Cosmology Explorer scene while keeping the upper cosmology (Monad / Pleroma / Aeons) as stable local data.
+
+**ExplorerNodeButton styling & visual testing**
+
+- Renamed the component to `ExplorerNodeButton` (clearer naming, avoids potential OS/framework collisions).
+- Simplified the button to display only the title for now (short description will be shown in the future detail overlay/popup).
+- Applied Liquid Glass styling using `Capsule` + `.glassEffect(.clear, in: .capsule)` with dark translucent fill and gold accent on selection — designed to match the existing TabBar aesthetic.
+- Temporarily placed a horizontal test row of `ExplorerNodeButton`s (using local seeds for Monad, Pleroma, and Aeon) directly inside `CosmoScene` on a black background. This allows real-time visual evaluation of the Liquid Glass effect in the running simulator/device.
+- Cleaned up leftover placeholder comments and test scaffolding from earlier iterations.
+
+The button is now in a good state for the next phase of work: binding real `ExplorerNode` data and styling the full explorer canvas.
 
 ## Current Session Focus
 
