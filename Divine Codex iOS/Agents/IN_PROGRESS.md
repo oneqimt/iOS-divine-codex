@@ -1,10 +1,10 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 2026 (button styling & visual testing)  
+> **Last Updated**: June 1, 2026 (button styling & visual testing)  
 > **Current Focus**: ExplorerNodeButton styling with Liquid Glass + temporary visual testing in CosmoScene
 
-## Current Session Focus (June 2026)
+## Current Session Focus (June 1, 2026)
 
 **Explorer data modeling & integration**
 

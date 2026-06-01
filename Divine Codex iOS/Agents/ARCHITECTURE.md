@@ -78,37 +78,34 @@ Key experiential goals:
 - Smooth, contemplative navigation between cosmic layers
 - Visual harmony with the Liquid Glass design language used elsewhere in the app
 
-### Conceptual Scene Hierarchy
-The scene is conceptually organized as a vertical layered cosmos. This structure is currently a working model and will likely evolve as the Sanity content schema is defined.
+### Conceptual Scene Hierarchy (Current Simplified Root — Phase 1)
+
+The scene is organized as a vertical layered cosmos. For the initial implementation we have deliberately simplified the root to a stable, local hierarchy while allowing dynamic content from Sanity to attach beneath it.
+
+**Current Root Entity (Monad) — Containment Rules**
 
 ```
-Root Entity (World Anchor)
-├── Light System (Directional + Ambient + Point lights with golden/violet hues)
-├── Background Stars / Nebula Entity (Particle System)
-│
-├── Monad Entity (Top / Center)
-│   └── Pulsating Golden Core + Soft Glow
-│
-├── Treasury of Light Layer
-│   └── Multiple glowing "Mansions" / Treasuries (semi-transparent spheres)
-│
-├── 13th Aeon (Region of Righteousness)
-│   ├── Central Platform
-│   └── 24 Invisibles Syzygies
-│       ├── 12 Paired Entities (Male + Female)
-│       └── Each pair has subtle orbiting light connection
-│
-├── Twelve Aeons Layer (Lower)
-│   ├── Split into two groups (6 + 6)
-│   └── Visual distinction (more dense, slightly darker)
-│
-├── Sophia’s Realm
-│   ├── Descent Path (animated glowing trail)
-│   └── Redemption Ascent Path
-│
-└── Chaos / Lower Realms (Bottom)
-    └── Darker, more turbulent particle effects
+CosmologyRoot (RealityKit root Entity)
+├── Lighting Rig
+│   └── Directional + ambient + subtle point lights (golden / violet sacred palette)
+├── Background Layer
+│   └── Starfield / subtle nebula (particle or mesh-based)
+└── Hierarchy (from ExplorerNode data)
+    └── Monad (LocalCosmologySeeds.monad)
+        └── Pleroma (LocalCosmologySeeds.pleroma)          // 1:1 containment
+            └── Aeons (LocalCosmologySeeds.aeons)           // 1:many containment
+                └── Dynamic emanations (Barbelo, Sophia, the 24 Invisibles, etc.)
+                    (sourced from Sanity via DivineCodex + explorer visuals)
 ```
+
+**Key Simplifications (Phase 1)**
+- **Monad → Pleroma → Aeons** is the stable local root. The Monad contains exactly one Pleroma. The Pleroma contains one or more Aeons. These three layers are always present from `LocalCosmologySeeds` and are intentionally kept local.
+- Individual emanations (Barbelo, Sophia, the 24 Invisibles, etc.) are dynamic. They arrive from Sanity as `DivineCodex` documents, are converted to `ExplorerNode.emanation(...)`, and are merged into the view model. They conceptually live under the Aeons (or directly under the Pleroma during early development).
+- Lower realms (Chaos and everything beneath the Aeons) are explicitly deferred.
+
+This containment model (Monad contains Pleroma 1:1, Pleroma contains Aeons 1:many) is the current contract. The visual positions in `ExplorerVisuals` are currently authored in world space. In later phases we can move to true RealityKit parent-child relationships that mirror this containment.
+
+This root is intentionally minimal so we can first get camera focus, node selection, and the expand/reveal interaction solid before adding more cosmological depth.
 
 ### Core Technical Components (Early Direction)
 - **Main Scene Controller**: `CosmoScene.swift`

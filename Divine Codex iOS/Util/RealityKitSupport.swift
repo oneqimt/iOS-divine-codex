@@ -6,11 +6,11 @@
 //
 //  Created for the Cosmology Explorer.
 //
-//  Notes:
-//  - Even when using RealityKit in a pure 3D (non-AR) context, the underlying
-//    hardware requirements are effectively the same as ARKit on iOS.
-//  - The most reliable public check is `ARWorldTrackingConfiguration.isSupported`.
-//  - This currently maps to A12 Bionic and newer devices (iPhone XS/XR and later).
+//  Important:
+//  - The Cosmology Explorer currently uses RealityKit in **pure 3D mode** (no ARSession).
+//  - `ARWorldTrackingConfiguration.isSupported` is overly strict for non-AR use cases.
+//  - We therefore use a more permissive check for modern iOS devices while still
+//    falling back to the ARKit check on older OS versions.
 
 import Foundation
 import ARKit
@@ -18,23 +18,31 @@ import RealityKit
 
 enum RealityKitSupport {
 
-    /// Returns `true` if this device can run RealityKit.
+    /// Returns `true` if this device can render a RealityKit 3D scene.
     ///
-    /// This check is valid whether you plan to use RealityKit in pure 3D mode
-    /// or with an AR session.
+    /// This is intentionally more permissive than `ARWorldTrackingConfiguration.isSupported`
+    /// because the current implementation uses pure RealityKit (PerspectiveCamera + RealityView)
+    /// with no AR world tracking or ARSession.
     static var isSupported: Bool {
-        ARWorldTrackingConfiguration.isSupported
+        // On iOS 18 and later, the vast majority of devices can render basic
+        // RealityKit scenes. This is the primary path for our pure-3D Cosmology Explorer.
+        if #available(iOS 18.0, *) {
+            return true
+        }
+
+        // Fallback for older OS versions: use the stricter ARKit world tracking check.
+        return ARWorldTrackingConfiguration.isSupported
     }
 
     /// A human-readable explanation when RealityKit is not available.
     /// Returns `nil` when support is available.
     static var unsupportedReason: String? {
         guard !isSupported else { return nil }
-        return "This device does not support RealityKit. A12 Bionic or newer is required."
+        return "This device does not support the graphics capabilities required for the Cosmology Explorer."
     }
 
     /// Convenience for showing a user-facing message.
     static var unsupportedMessage: String {
-        "The Cosmology Explorer requires a device with an A12 Bionic chip or newer (iPhone XS or later)."
+        "The Cosmology Explorer requires a device capable of running RealityKit (most devices on iOS 18 and later)."
     }
 }

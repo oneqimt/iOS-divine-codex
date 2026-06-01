@@ -5,8 +5,8 @@
 //  A beautiful, tappable Liquid Glass button representing a node in the
 //  Cosmology Explorer (Monad, Pleroma, Aeons, Barbelo, Sophia, Invisibles, etc.).
 //
-//  Currently shows only the title. The short description will be used in
-//  the detail overlay/popup when a node is selected.
+//  Uses NodeLabelView for consistent title rendering across 2D buttons and
+//  3D scene attachments. Applies Liquid Glass treatment matching the TabBarView.
 //
 
 import SwiftUI
@@ -17,27 +17,40 @@ struct ExplorerNodeButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Text(node.name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(isSelected ? Theme.Colors.background : Theme.Colors.primaryText)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 9)
+        GlassEffectContainer {
+            Button(action: action) {
+                NodeLabelView(title: node.name, isEmphasized: isSelected)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+            .background {
+                Capsule()
+                    .fill(Color.black.opacity(0.45))
+                    .glassEffect(.clear, in: .capsule)
+            }
+            .overlay {
+                if isSelected {
+                    Capsule()
+                        .fill(.clear)
+                        .glassEffect(
+                            .regular.tint(Theme.Colors.divineGold.opacity(0.35)).interactive(),
+                            in: .capsule
+                        )
+                }
+            }
+            .overlay {
+                Capsule()
+                    .stroke(
+                        isSelected
+                            ? Theme.Colors.divineGold.opacity(0.55)
+                            : Color.white.opacity(0.12),
+                        lineWidth: isSelected ? 1.5 : 1
+                    )
+            }
+            .scaleEffect(isSelected ? 1.04 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isSelected)
         }
-        .background(
-            Capsule()
-                .fill(isSelected ? Theme.Colors.divineGold : Color.black.opacity(0.10))
-        )
-        .glassEffect(.clear, in: .capsule)
-        .overlay(
-            Capsule()
-                .stroke(
-                    isSelected ? Theme.Colors.divineGold.opacity(0.5) : Color.white.opacity(0.12),
-                    lineWidth: 1
-                )
-        )
-        .scaleEffect(isSelected ? 1.03 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
 }
 

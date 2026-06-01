@@ -4,26 +4,10 @@
 //
 //  The full-screen immersive RealityKit Cosmology Explorer.
 //
-//  Currently uses local mock data. This will later be driven by the
-//  ExplorerViewModel + content loaded from Sanity.
+//  Clean reconstruction that preserves the working OLD structure
+//  while integrating the new architecture (ExplorerViewModel, ExplorerNode,
+//  NodeLabelView, camera focus system, and single-node highlight logic).
 //
-//  Design notes:
-//  - Pure 3D for now (no AR session).
-//  - Free camera movement (pan/orbit/zoom) is the goal.
-//  - Node selection will eventually drive a 2D SwiftUI pointing overlay.
-//
-//  ⚠️ See the RealityViewContent visibility warning inside the body below.
-
-// MARK: - The 24 Invisibles (Definition)
-//
-// The 24 Invisibles are twelve sacred syzygies (divine masculine + feminine pairs)
-// that dwell in the 13th Aeon, also called the Region of Righteousness.
-// They represent perfect divine balance and are a core part of the Gnostic
-// cosmology we are visualizing in this scene.
-//
-// In our current model they will eventually live under the "Aeon" layer
-// (specifically the 13th Aeon), with Barbelo and Sophia being two of the
-// most important individual emanations we surface from Sanity data.
 
 import SwiftUI
 import RealityKit
@@ -31,75 +15,116 @@ import simd
 
 struct CosmoScene: View {
 
-    /// The explorer view model containing the combined local + server nodes.
-    /// Passed in from ExplorerView so we have access to the built node list.
+    // MARK: - Dependencies
+
     let explorerViewModel: ExplorerViewModel
-
-    /// Access to server data (DivineCodex entries for Barbelo, Sophia, etc.)
     @Environment(SanityViewModel.self) private var sanity
+    @Environment(\.dismiss) private var dismiss
 
-    // References to key entities so we can perform hit testing from gestures.
+    // MARK: - RealityKit References
+
     @State private var rootEntity: Entity?
     @State private var cameraEntity: Entity?
 
-    // Simple visual feedback for selection during early development.
-    @State private var highlightedEntity: Entity?
+    // MARK: - Camera Focus System
 
-    /// Used to dismiss the fullScreenCover from inside the immersive experience.
-    @Environment(\.dismiss) private var dismiss
+    @State private var cameraTargetPosition: SIMD3<Float>?
+    @State private var cameraTargetLookAt: SIMD3<Float>?
+    @State private var isCameraAnimating = false
+    @State private var hasReceivedInitialSelectionChange = false
+
+    // MARK: - Visual Emphasis (Single Node Highlight)
+
+    @State private var highlightedEntity: Entity?
+    @State private var targetHighlightScale: Float = 1.0
+
+    // MARK: - 2D Label Overlay (for node titles)
+
+    @State private var labelScreenPositions: [String: CGPoint] = [:]
+
+    /// Entities created in the 3D scene, keyed by node id.
+    @State private var nodeEntities: [String: Entity] = [:]
+
+    /// Holds the subscription to SceneEvents.Update so it isn't immediately cancelled.
+    @State private var sceneUpdateSubscription: EventSubscription?
+
+    // MARK: - Default Camera
+
+    private let defaultCameraPosition = SIMD3<Float>(0, 11, 30)
+    private let defaultCameraLookAt = SIMD3<Float>(0, 9, 0)
+
+    // MARK: - Body
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            // Main immersive content (full bleed)
-            // Using black background for now to better evaluate Liquid Glass effects
             ZStack {
                 Color.black.ignoresSafeArea()
 
                 Group {
                     if RealityKitSupport.isSupported {
                         GeometryReader { geometry in
-                            RealityView { content in
-                                // Root entity
-                                let root = Entity()
-                                root.name = "CosmologyRoot"
+                            ZStack {
+                                RealityView { content in
+                                    let root = Entity()
+                                    root.name = "CosmologyRoot"
 
-                                // Basic lighting
-                                let light = DirectionalLight()
-                                light.light.intensity = 1200
-                                light.position = [0, 10, 0]
-                                root.addChild(light)
+                                    // Basic lighting
+                                    let light = DirectionalLight()
+                                    light.light.intensity = 1400
+                                    light.position = [0, 12, 0]
+                                    root.addChild(light)
 
-                                // TEMP: Still rendering with old mock data while we migrate
-                                // to the new ExplorerNode system. We will bind real data next.
-                                for node in LocalCosmology.nodes {
-                                    let entity = makeEntity(for: node)
-                                    root.addChild(entity)
+                                    // Create entities from the modern data model
+                                    var entityMap: [String: Entity] = [:]
+
+                                    for node in explorerViewModel.nodes {
+                                        if let entity = makeEntity(for: node) {
+                                            root.addChild(entity)
+                                            entityMap[node.id] = entity
+                                        }
+                                    }
+
+                                    content.add(root)
+
+                                    // Camera
+                                    let camera = PerspectiveCamera()
+                                    camera.position = defaultCameraPosition
+                                    camera.look(at: defaultCameraLookAt,
+                                                from: defaultCameraPosition,
+                                                relativeTo: nil)
+                                    content.add(camera)
+
+                                    // Animation + highlight + label positioning loop
+                                    // Store the subscription so it isn't deallocated immediately.
+                                    sceneUpdateSubscription = content.subscribe(to: SceneEvents.Update.self) { _ in
+                                        animateCameraStep(camera: camera)
+                                        animateHighlight()
+                                        updateLabelScreenPositions(camera: camera, viewSize: geometry.size)
+                                    }
+
+                                    DispatchQueue.main.async {
+                                        rootEntity = root
+                                        cameraEntity = camera
+                                        nodeEntities = entityMap
+                                    }
                                 }
+                                .gesture(
+                                    SpatialTapGesture()
+                                        .onEnded { value in
+                                            let tapLocation = value.location
+                                            handleTap(at: tapLocation, in: geometry.size)
+                                        }
+                                )
 
-                                content.add(root)
-
-                                // Custom camera entity (gives us control later for map-style navigation)
-                                let camera = PerspectiveCamera()
-                                camera.position = SIMD3<Float>(0, 8, 18)
-                                camera.look(at: SIMD3<Float>(0, 4, 0),
-                                            from: camera.position,
-                                            relativeTo: nil)
-                                content.add(camera)
-
-                                // Store references for hit testing from gestures.
-                                // We dispatch to main to avoid modifying state during the make closure.
-                                DispatchQueue.main.async {
-                                    rootEntity = root
-                                    cameraEntity = camera
+                                // 2D Node Labels (overlay)
+                                ForEach(Array(labelScreenPositions.keys), id: \.self) { id in
+                                    if let pos = labelScreenPositions[id],
+                                       let node = explorerViewModel.nodes.first(where: { $0.id == id }) {
+                                        NodeLabelView(title: node.name)
+                                            .position(pos)
+                                    }
                                 }
                             }
-                            .gesture(
-                                SpatialTapGesture()
-                                    .onEnded { value in
-                                        let tapLocation = value.location
-                                        handleTap(at: tapLocation, in: geometry.size)
-                                    }
-                            )
                         }
                     } else {
                         UnsupportedRealityKitView()
@@ -108,53 +133,33 @@ struct CosmoScene: View {
             }
             .ignoresSafeArea()
 
-            // Dismiss button (always available, respects safe area)
+            // Dismiss button
             closeButton
                 .padding(.top, 8)
                 .padding(.trailing, 20)
                 .safeAreaPadding(.top)
-
-            // TEMPORARY: Buttons for visual testing of ExplorerNodeButton on the black canvas.
-            // This lets us evaluate the Liquid Glass styling in the actual running context.
-            VStack {
-                Spacer()
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ExplorerNodeButton(
-                            node: .monad(LocalCosmologySeeds.monad),
-                            isSelected: false,
-                            action: { print("Tapped: Monad") }
-                        )
-
-                        ExplorerNodeButton(
-                            node: .pleroma(LocalCosmologySeeds.pleroma),
-                            isSelected: true,
-                            action: { print("Tapped: Pleroma") }
-                        )
-
-                        if let firstAeon = LocalCosmologySeeds.aeons.first {
-                            ExplorerNodeButton(
-                                node: .aeon(firstAeon),
-                                isSelected: false,
-                                action: { print("Tapped: \(firstAeon.name)") }
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 60)
-                }
-            }
         }
         .onAppear {
             explorerViewModel.didEnterImmersiveScene()
-
-            // Debug logging for data flow (can be removed later)
             print("Sanity codices count: \(sanity.codices.count)")
             print("ExplorerViewModel nodes count: \(explorerViewModel.nodes.count)")
         }
         .onDisappear {
             explorerViewModel.didExitImmersiveScene()
+            resetCameraAndHighlightState()
+        }
+        .onChange(of: explorerViewModel.selectedNode) { oldValue, newNode in
+            if !hasReceivedInitialSelectionChange {
+                hasReceivedInitialSelectionChange = true
+                if oldValue == nil && newNode == nil { return }
+            }
+
+            if let node = newNode {
+                focusOnNode(node)
+            } else {
+                returnToOverview()
+            }
+            updateHighlight(for: newNode)
         }
     }
 
@@ -178,139 +183,220 @@ struct CosmoScene: View {
         .accessibilityLabel("Close Cosmology Explorer")
     }
 
-    // MARK: - Helpers
+    // MARK: - Entity Creation (updated for new data model)
 
-    private func makeEntity(for node: MockCosmicNode) -> Entity {
-        let visuals = node.explorer
+    private func makeEntity(for node: ExplorerNode) -> Entity? {
+        guard let visuals = node.explorer else { return nil }
 
-        let radius: Float = (visuals?.scale ?? 0.8) * 0.5
+        let radius: Float = (visuals.scale ?? 1.0) * 0.5
 
-        let mesh: MeshResource = switch visuals?.geometryHint {
-        case "sphere", "light":   .generateSphere(radius: radius)
-        case "octahedron":        .generateBox(size: radius * 1.4)
-        case "icosahedron":       .generateSphere(radius: radius)
-        case "torus":             .generateSphere(radius: radius) // placeholder
-        default:                  .generateSphere(radius: radius)
+        let mesh: MeshResource = switch visuals.geometryHint {
+        case "sphere", "light": .generateSphere(radius: radius)
+        case "octahedron":      .generateBox(size: radius * 1.4)
+        default:                .generateSphere(radius: radius)
         }
 
         let material = SimpleMaterial(
-            color: colorFromHex(visuals?.colorHex) ?? .white,
+            color: colorFromHex(visuals.colorHex) ?? .white,
             isMetallic: false
         )
 
         let entity = ModelEntity(mesh: mesh, materials: [material])
         entity.name = node.id
-        entity.position = visuals?.worldPosition ?? .zero
+        entity.position = visuals.worldPosition
 
-        // Attach lightweight component so we can map back to logical node on tap
-        entity.components.set(MockNodeComponent(nodeId: node.id))
-
-        // Add collision so we can perform proper 3D hit testing / ray casts.
-        entity.components.set(CollisionComponent(shapes: [.generateSphere(radius: radius * 1.2)]))
+        entity.components.set(NodeIdentifierComponent(nodeId: node.id))
+        entity.components.set(CollisionComponent(shapes: [.generateSphere(radius: radius * 1.25)]))
 
         return entity
     }
 
     private func colorFromHex(_ hex: String?) -> UIColor? {
         guard let hex = hex else { return nil }
-        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-
+        let hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: "")
         var rgb: UInt64 = 0
         guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
-
         let r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
         let g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
         let b = CGFloat(rgb & 0x0000FF) / 255.0
-
         return UIColor(red: r, green: g, blue: b, alpha: 1.0)
+    }
+
+    // MARK: - Camera Focus System
+
+    private func focusOnNode(_ node: ExplorerNode) {
+        guard let visuals = node.explorer else { return }
+
+        let focusDistance: Float = 18.0
+        let cameraHeight: Float = 11.5
+        let lookAtLift: Float = 1.8
+
+        let targetPosition = SIMD3<Float>(
+            visuals.worldPosition.x,
+            cameraHeight,
+            visuals.worldPosition.z + focusDistance
+        )
+        let targetLookAt = visuals.worldPosition + SIMD3<Float>(0, lookAtLift, 0)
+
+        cameraTargetPosition = targetPosition
+        cameraTargetLookAt = targetLookAt
+        isCameraAnimating = true
+    }
+
+    private func returnToOverview() {
+        cameraTargetPosition = defaultCameraPosition
+        cameraTargetLookAt = defaultCameraLookAt
+        isCameraAnimating = true
+    }
+
+    private func animateCameraStep(camera: Entity) {
+        guard isCameraAnimating,
+              let targetPos = cameraTargetPosition,
+              let targetLook = cameraTargetLookAt else { return }
+
+        let currentPos = camera.position
+        let distance = simd_length(targetPos - currentPos)
+
+        if distance < 0.15 {
+            isCameraAnimating = false
+            return
+        }
+
+        let damping: Float = 0.075
+        let newPos = simd_mix(currentPos, targetPos, SIMD3<Float>(repeating: damping))
+        camera.position = newPos
+        camera.look(at: targetLook, from: newPos, relativeTo: nil)
+    }
+
+    private func resetCameraAndHighlightState() {
+        cameraTargetPosition = nil
+        cameraTargetLookAt = nil
+        isCameraAnimating = false
+        hasReceivedInitialSelectionChange = false
+        highlightedEntity = nil
+        targetHighlightScale = 1.0
+        labelScreenPositions = [:]
+
+        for entity in nodeEntities.values {
+            entity.scale = [1, 1, 1]
+        }
+
+        // Cancel the recurring SceneEvents.Update subscription
+        sceneUpdateSubscription?.cancel()
+        sceneUpdateSubscription = nil
+    }
+
+    // MARK: - Visual Emphasis (Single Node)
+
+    private func updateHighlight(for node: ExplorerNode?) {
+        if let old = highlightedEntity {
+            old.scale = [1, 1, 1]
+        }
+
+        guard let node = node,
+              let entity = nodeEntities[node.id] else {
+            highlightedEntity = nil
+            targetHighlightScale = 1.0
+            return
+        }
+
+        highlightedEntity = entity
+        targetHighlightScale = 1.65
+    }
+
+    private func animateHighlight() {
+        guard let entity = highlightedEntity else { return }
+        let current = entity.scale.x
+        let newScale = simd_mix(current, targetHighlightScale, 0.12)
+        entity.scale = SIMD3<Float>(repeating: newScale)
+
+        if targetHighlightScale == 1.0 && abs(newScale - 1.0) < 0.01 {
+            highlightedEntity = nil
+        }
+    }
+
+    // MARK: - 2D Label Projection (Overlay)
+
+    private func updateLabelScreenPositions(camera: Entity, viewSize: CGSize) {
+        var newPositions: [String: CGPoint] = [:]
+
+        for (id, entity) in nodeEntities {
+            guard let node = explorerViewModel.nodes.first(where: { $0.id == id }),
+                  node.explorer != nil else { continue }
+
+            if let screenPos = worldToScreen(entity.position, camera: camera, viewSize: viewSize) {
+                newPositions[id] = CGPoint(x: screenPos.x, y: screenPos.y - 52)
+            }
+        }
+
+        DispatchQueue.main.async {
+            self.labelScreenPositions = newPositions
+        }
+    }
+
+    private func worldToScreen(_ worldPosition: SIMD3<Float>, camera: Entity, viewSize: CGSize) -> CGPoint? {
+        let cameraPos = camera.position
+        let toPoint = worldPosition - cameraPos
+        let local = camera.orientation.inverse.act(toPoint)
+        guard local.z < 0 else { return nil }
+
+        let fov: Float = .pi / 3.0
+        let aspect = Float(viewSize.width / viewSize.height)
+        let tanHalfFov = tan(fov / 2)
+
+        let x = (local.x / (-local.z)) / (tanHalfFov * aspect)
+        let y = (local.y / (-local.z)) / tanHalfFov
+
+        let screenX = (x + 1) * 0.5 * Float(viewSize.width)
+        let screenY = (1 - y) * 0.5 * Float(viewSize.height)
+        return CGPoint(x: CGFloat(screenX), y: CGFloat(screenY))
     }
 
     // MARK: - Hit Testing
 
     private func handleTap(at location: CGPoint, in viewSize: CGSize) {
-        guard let root = rootEntity,
-              let camera = cameraEntity else {
-            return
-        }
+        guard let root = rootEntity, let camera = cameraEntity else { return }
 
-        // Generate a world-space ray from the tap location through the camera.
         let (origin, direction) = makeRayVectors(from: location, viewSize: viewSize, camera: camera)
+        guard let scene = root.scene else { return }
 
-        guard let scene = root.scene else {
-            print("Scene not yet available for hit testing")
-            return
-        }
+        let hits = scene.raycast(origin: origin, direction: direction, length: 1000, query: .nearest)
 
-        // Perform raycast against collision shapes in the scene.
-        let hits = scene.raycast(
-            origin: origin,
-            direction: direction,
-            length: 1000,
-            query: .nearest
-        )
-
-        // Find the first hit that corresponds to one of our cosmic nodes.
         for hit in hits {
-            if let component = hit.entity.components[MockNodeComponent.self],
+            if let component = hit.entity.components[NodeIdentifierComponent.self],
                let node = explorerViewModel.nodes.first(where: { $0.id == component.nodeId }) {
 
-                // Clear previous highlight
-                highlightedEntity?.scale = [1, 1, 1]
-                highlightedEntity = hit.entity
-                hit.entity.scale = [1.4, 1.4, 1.4]   // Simple "selected" pulse
-
-                explorerViewModel.selectNode(node)
-                print("✓ Selected node: \(node.name) (id: \(node.id))")
+                if explorerViewModel.selectedNode?.id == node.id {
+                    explorerViewModel.clearSelection()
+                } else {
+                    explorerViewModel.selectNode(node)
+                }
                 return
             }
         }
 
-        // Tapped empty space — clear selection.
-        highlightedEntity?.scale = [1, 1, 1]
-        highlightedEntity = nil
-
         explorerViewModel.clearSelection()
-        print("— Cleared selection (tapped empty space)")
     }
 
-    /// Creates a ray (origin + direction) in world space from a screen tap location using the given camera.
     private func makeRayVectors(from point: CGPoint, viewSize: CGSize, camera: Entity) -> (origin: SIMD3<Float>, direction: SIMD3<Float>) {
-        // Normalize tap to NDC (-1 to +1)
         let x = (Float(point.x) / Float(viewSize.width)) * 2 - 1
-        let y = 1 - (Float(point.y) / Float(viewSize.height)) * 2   // flip Y
-
-        // Approximate field of view (we can make this more precise later by reading the actual camera projection).
-        let fov: Float = .pi / 3.0   // ~60 degrees
+        let y = 1 - (Float(point.y) / Float(viewSize.height)) * 2
+        let fov: Float = .pi / 3.0
         let aspect = Float(viewSize.width / viewSize.height)
         let tanHalfFov = tan(fov / 2)
 
-        // Direction in camera space
-        var direction = SIMD3<Float>(
-            x * tanHalfFov * aspect,
-            y * tanHalfFov,
-            -1.0
-        )
-
-        direction = simd_normalize(direction)
-
-        // Transform direction into world space using the camera's orientation
-        let worldDirection = camera.orientation.act(direction)
-        let origin = camera.position
-
-        return (origin: origin, direction: worldDirection)
+        var dir = SIMD3<Float>(x * tanHalfFov * aspect, y * tanHalfFov, -1.0)
+        dir = simd_normalize(dir)
+        let worldDir = camera.orientation.act(dir)
+        return (camera.position, worldDir)
     }
 }
 
-// MARK: - Temporary Component for Entity <-> Node mapping
+// MARK: - Supporting Types
 
-/// Lightweight component we attach to RealityKit entities so we can
-/// identify which logical MockCosmicNode they represent during hit testing.
-struct MockNodeComponent: Component {
+struct NodeIdentifierComponent: Component {
     let nodeId: String
 }
-
-// MARK: - Unsupported Fallback
 
 private struct UnsupportedRealityKitView: View {
     var body: some View {
@@ -318,14 +404,9 @@ private struct UnsupportedRealityKitView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 60))
                 .foregroundStyle(Theme.Colors.divineGold)
-
             Text("Cosmology Explorer Unavailable")
                 .font(Theme.Fonts.heroTitle)
-                .foregroundStyle(Theme.Colors.primaryText)
-
             Text(RealityKitSupport.unsupportedMessage)
-                .font(Theme.Fonts.body)
-                .foregroundStyle(Theme.Colors.secondaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
@@ -333,7 +414,3 @@ private struct UnsupportedRealityKitView: View {
         .background(Theme.Colors.background)
     }
 }
-
-//#Preview {
-//    CosmoScene()
-//}
