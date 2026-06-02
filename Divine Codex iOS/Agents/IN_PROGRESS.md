@@ -1,8 +1,8 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 2, 2026 (CosmoScene stabilization, camera focus, NodeLabelView)  
-> **Current Focus**: CosmoScene refactoring + camera focus system + reusable NodeLabelView + interaction refinements
+> **Last Updated**: June 3, 2026 (CosmoScene panning/orbit/dolly + pinned detail overlays)  
+> **Current Focus**: Panning feature for CosmoScene (manual camera orbit + pinch dolly while keeping 2D ExplorerNodeButton overlays pinned via live projection)
 
 ## Current Session Focus (June 2, 2026)
 
@@ -21,6 +21,33 @@
 - Fixed numerous compilation and view hierarchy issues introduced during heavy editing.
 
 This work brings `CosmoScene` to a stable, modern foundation using the real data model. The camera focus and interaction rules are now solid in preparation for adding manual panning/orbit controls and the detail card + leader line UI.
+
+---
+
+## Current Session Focus (June 3, 2026)
+
+**Panning / manual orbit + dolly for CosmoScene**
+
+- Added full manual camera control to `CosmoScene`:
+  - Single-finger drag (minimumDistance: 10) → orbits yaw/pitch around a pivot (last focused node's look-at point or the overview center).
+  - Two-finger pinch (MagnificationGesture) → dolly (in/out) with a robust accumulated model that does not jump when lifting and re-pinching.
+- Used `.simultaneousGesture` for both so panning works even when starting the drag over a 2D overlay button (label or open detail card). Tiny movements (<10pt) still deliver clean taps to the `ExplorerNodeButton`s.
+- While `isUserPanning`, the `SceneEvents.Update` subscription drives `applyUserOrbit` instead of the scripted `animateCameraStep`. `isCameraAnimating` is forced false on gesture start.
+- The 2D overlay `ForEach` of `ExplorerNodeButton` (compact `NodeLabelView` or expanded `NodeDetailView`) continues to receive fresh `updateLabelScreenPositions` every frame. Because projection uses the *live* camera (post-orbit or mid-dolly), the cards/labels stay perfectly pinned to their 3D nodes as the user pans. This fulfills the "detail stays pinned to the node's projected point" requirement.
+- Selecting any node (via 2D button tap or 3D raycast) cancels manual panning (`isUserPanning = false`) and starts a scripted focus animation to that node from the current (possibly panned) camera pose.
+- Clearing selection (tap empty 3D space, tap the x in an open detail, or tap the selected node again) returns camera to overview via animation.
+- Cleaned up a duplicate `ForEach` for the overlay buttons (would have rendered every label/detail twice).
+- Improved live label projection by removing the unnecessary `DispatchQueue.main.async` wrapper (subscription is main-threaded) for lower latency during fast pans.
+- State vars, snapshot logic on gesture entry, `applyUserOrbit`, `resetCameraAndHighlightState`, and distance clamping (5–120) are all in place.
+- The interaction model now supports the future "node becomes detail" tween while panned: the large detail card will follow its 3D anchor fluidly.
+
+**TUNING KNOBS (still relevant)**
+- `label3DOffsetScaleFactor` / `label3DOffsetBase` in `CosmoScene.swift` control vertical lift of the 2D cards above the 3D entity centers (scale-aware for large nodes like Pleroma).
+- In `NodeLabelView.swift`: the vertical padding ternary for stronger 3D compact bg.
+- In `applyUserOrbit` / gesture: `sensitivity: Float = 0.004`; pitch clamp ±(π/2 - 0.05); orbitDistance clamp 5...120.
+- Pivot choice on pan entry: prefers `cameraTargetLookAt` (so orbiting a focused node feels natural).
+
+Panning is now the primary way to explore the scene once a node is selected or from overview. Scripted focus still "just works" on top of it and interrupts cleanly. Detail cards follow without extra code because they are live-projected overlays, not RealityKit attachments.
 
 ---
 

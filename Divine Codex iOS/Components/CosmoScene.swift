@@ -48,6 +48,16 @@ struct CosmoScene: View {
     /// Holds the subscription to SceneEvents.Update so it isn't immediately cancelled.
     @State private var sceneUpdateSubscription: EventSubscription?
 
+    // MARK: - Manual Camera Panning / Orbit / Dolly
+
+    @State private var isUserPanning = false
+    @State private var accumulatedYaw: Float = 0
+    @State private var accumulatedPitch: Float = 0
+    @State private var orbitDistance: Float = 30
+    @State private var lastDragTranslation: CGSize = .zero
+    @State private var lastMagnification: CGFloat = 1.0
+    @State private var userOrbitPivot: SIMD3<Float> = .zero
+
     // MARK: - Default Camera
 
     private let defaultCameraPosition = SIMD3<Float>(0, 11, 30)
@@ -107,7 +117,11 @@ struct CosmoScene: View {
                                     // Animation + highlight + label positioning loop
                                     // Store the subscription so it isn't deallocated immediately.
                                     sceneUpdateSubscription = content.subscribe(to: SceneEvents.Update.self) { _ in
-                                        animateCameraStep(camera: camera)
+                                        if isUserPanning {
+                                            applyUserOrbit(camera: camera)
+                                        } else {
+                                            animateCameraStep(camera: camera)
+                                        }
                                         animateHighlight()
                                         updateLabelScreenPositions(camera: camera, viewSize: geometry.size)
                                     }
@@ -126,10 +140,12 @@ struct CosmoScene: View {
                                         }
                                 )
 
-                                // 2D Node representations (overlay) - now using ExplorerNodeButton
+                                // 2D Node representations (overlay) - using ExplorerNodeButton
                                 // so the same component can tween to detail state.
                                 // In 3D, the "label" at the node's screen pos is the button, which
                                 // becomes the detail card when selected (original node visual becomes the detail).
+                                // These stay correctly pinned during manual panning because
+                                // updateLabelScreenPositions runs every frame against the live camera.
                                 ForEach(Array(labelScreenPositions.keys), id: \.self) { id in
                                     if let pos = labelScreenPositions[id],
                                        let node = explorerViewModel.nodes.first(where: { $0.id == id }) {
@@ -149,6 +165,65 @@ struct CosmoScene: View {
                                     }
                                 }
                             }
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 10)
+                                    .onChanged { value in
+                                        if !isUserPanning {
+                                            isUserPanning = true
+                                            isCameraAnimating = false
+
+                                            if let cam = cameraEntity {
+                                                let pivot = cameraTargetLookAt ?? defaultCameraLookAt
+                                                userOrbitPivot = pivot
+                                                let vec = cam.position - pivot
+                                                orbitDistance = simd_length(vec)
+                                                accumulatedYaw = atan2(vec.x, vec.z)
+                                                accumulatedPitch = asin(vec.y / max(orbitDistance, 0.001))
+                                            }
+                                            lastDragTranslation = value.translation
+                                        }
+
+                                        let sensitivity: Float = 0.004
+                                        let delta = CGSize(
+                                            width: value.translation.width - lastDragTranslation.width,
+                                            height: value.translation.height - lastDragTranslation.height
+                                        )
+                                        accumulatedYaw += Float(delta.width) * sensitivity
+                                        accumulatedPitch += Float(delta.height) * sensitivity
+                                        accumulatedPitch = max(-Float.pi / 2 + 0.05, min(Float.pi / 2 - 0.05, accumulatedPitch))
+                                        lastDragTranslation = value.translation
+                                    }
+                                    .onEnded { _ in
+                                        lastDragTranslation = .zero
+                                    }
+                            )
+                            .simultaneousGesture(
+                                MagnificationGesture()
+                                    .onChanged { value in
+                                        if !isUserPanning {
+                                            isUserPanning = true
+                                            isCameraAnimating = false
+                                            if let cam = cameraEntity {
+                                                let pivot = cameraTargetLookAt ?? defaultCameraLookAt
+                                                userOrbitPivot = pivot
+                                                let vec = cam.position - pivot
+                                                orbitDistance = simd_length(vec)
+                                                accumulatedYaw = atan2(vec.x, vec.z)
+                                                accumulatedPitch = asin(vec.y / max(orbitDistance, 0.001))
+                                            }
+                                            lastMagnification = 1.0
+                                        }
+                                        let deltaScale = value / lastMagnification
+                                        if deltaScale != 0 {
+                                            orbitDistance = orbitDistance / Float(deltaScale)
+                                        }
+                                        orbitDistance = max(5.0, min(120.0, orbitDistance))
+                                        lastMagnification = value
+                                    }
+                                    .onEnded { _ in
+                                        lastMagnification = 1.0
+                                    }
+                            )
                         }
                     } else {
                         UnsupportedRealityKitView()
@@ -265,12 +340,14 @@ struct CosmoScene: View {
         cameraTargetPosition = targetPosition
         cameraTargetLookAt = targetLookAt
         isCameraAnimating = true
+        isUserPanning = false   // scripted focus takes precedence
     }
 
     private func returnToOverview() {
         cameraTargetPosition = defaultCameraPosition
         cameraTargetLookAt = defaultCameraLookAt
         isCameraAnimating = true
+        isUserPanning = false
     }
 
     private func animateCameraStep(camera: Entity) {
@@ -292,6 +369,21 @@ struct CosmoScene: View {
         camera.look(at: targetLook, from: newPos, relativeTo: nil)
     }
 
+    private func applyUserOrbit(camera: Entity) {
+        guard isUserPanning else { return }
+
+        let pitch = accumulatedPitch
+        let yaw = accumulatedYaw
+        let distance = orbitDistance
+
+        let x = distance * cos(pitch) * sin(yaw)
+        let y = distance * sin(pitch)
+        let z = distance * cos(pitch) * cos(yaw)
+
+        camera.position = userOrbitPivot + SIMD3<Float>(x, y, z)
+        camera.look(at: userOrbitPivot, from: camera.position, relativeTo: nil)
+    }
+
     private func resetCameraAndHighlightState() {
         cameraTargetPosition = nil
         cameraTargetLookAt = nil
@@ -300,6 +392,13 @@ struct CosmoScene: View {
         highlightedEntity = nil
         targetHighlightScale = 1.0
         labelScreenPositions = [:]
+
+        isUserPanning = false
+        accumulatedYaw = 0
+        accumulatedPitch = 0
+        orbitDistance = 30
+        lastDragTranslation = .zero
+        lastMagnification = 1.0
 
         for entity in nodeEntities.values {
             entity.scale = [1, 1, 1]
@@ -355,9 +454,9 @@ struct CosmoScene: View {
             }
         }
 
-        DispatchQueue.main.async {
-            self.labelScreenPositions = newPositions
-        }
+        // Direct assignment (subscription callback is delivered on main).
+        // This gives tighter following for the 2D cards/labels when the user is manually panning/orbiting.
+        self.labelScreenPositions = newPositions
     }
 
     private func worldToScreen(_ worldPosition: SIMD3<Float>, camera: Entity, viewSize: CGSize) -> CGPoint? {
