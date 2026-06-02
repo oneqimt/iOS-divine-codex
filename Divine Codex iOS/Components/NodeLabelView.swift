@@ -12,6 +12,7 @@ import SwiftUI
 struct NodeLabelView: View {
     let title: String
     var isEmphasized: Bool = false
+    var useStrongerBackgroundFor3D: Bool = false  // for compact labels in the 3D scene overlay
 
     var body: some View {
         Text(title)
@@ -19,19 +20,30 @@ struct NodeLabelView: View {
             .foregroundStyle(Theme.Colors.primaryText)
             .lineLimit(1)
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, useStrongerBackgroundFor3D && !isEmphasized ? 4 : 3)  // TUNING KNOB for 3D compact label internal top/bottom padding (the ? value); increase if label text needs more space on large nodes
             .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
+                Group {
+                    if useStrongerBackgroundFor3D && !isEmphasized {
                         Capsule()
-                            .stroke(
-                                isEmphasized
-                                    ? Theme.Colors.divineGold.opacity(0.45)
-                                    : Color.white.opacity(0.12),
-                                lineWidth: isEmphasized ? 1.5 : 1
+                            .fill(Color.black.opacity(0.7))
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.25), lineWidth: 1)
                             )
-                    )
+                    } else {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        isEmphasized
+                                            ? Theme.Colors.divineGold.opacity(0.45)
+                                            : Color.white.opacity(0.12),
+                                        lineWidth: isEmphasized ? 1.5 : 1
+                                    )
+                            )
+                    }
+                }
             )
             .scaleEffect(isEmphasized ? 1.08 : 1.0)
             .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)

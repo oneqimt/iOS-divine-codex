@@ -53,6 +53,16 @@ struct CosmoScene: View {
     private let defaultCameraPosition = SIMD3<Float>(0, 11, 30)
     private let defaultCameraLookAt = SIMD3<Float>(0, 9, 0)
 
+    // === TUNING KNOBS for compact 3D node labels (initial state) ===
+    // These control the vertical "top padding" / space above the label relative to the 3D sphere center.
+    // Larger nodes (higher explorer.scale) get more lift via the scale factor.
+    // Lower the values to tighten (less space above the label on large nodes).
+    // The offset is used as y += verticalOffset (negative = higher on screen).
+    private let label3DOffsetScaleFactor: CGFloat = 28  // TUNING KNOB - lower to tighten top space on large nodes
+    private let label3DOffsetBase: CGFloat = 5          // TUNING KNOB - base for scale=1
+    // Additional knob in NodeLabelView.swift: the ? 4 in .padding(.vertical, useStronger... ? 4 : 3)
+    // Increase the 4 for more internal top/bottom padding on the text itself in 3D compact.
+
     // MARK: - Body
 
     var body: some View {
@@ -116,12 +126,26 @@ struct CosmoScene: View {
                                         }
                                 )
 
-                                // 2D Node Labels (overlay)
+                                // 2D Node representations (overlay) - now using ExplorerNodeButton
+                                // so the same component can tween to detail state.
+                                // In 3D, the "label" at the node's screen pos is the button, which
+                                // becomes the detail card when selected (original node visual becomes the detail).
                                 ForEach(Array(labelScreenPositions.keys), id: \.self) { id in
                                     if let pos = labelScreenPositions[id],
                                        let node = explorerViewModel.nodes.first(where: { $0.id == id }) {
-                                        NodeLabelView(title: node.name)
-                                            .position(pos)
+                                        ExplorerNodeButton(
+                                            node: node,
+                                            isSelected: explorerViewModel.selectedNode?.id == id,
+                                            action: {
+                                                if explorerViewModel.selectedNode?.id == node.id {
+                                                    explorerViewModel.clearSelection()
+                                                } else {
+                                                    explorerViewModel.selectNode(node)
+                                                }
+                                            },
+                                            useStrongerBackgroundFor3DCompact: true
+                                        )
+                                        .position(pos)
                                     }
                                 }
                             }
@@ -322,10 +346,12 @@ struct CosmoScene: View {
 
         for (id, entity) in nodeEntities {
             guard let node = explorerViewModel.nodes.first(where: { $0.id == id }),
-                  node.explorer != nil else { continue }
+                  let visuals = node.explorer else { continue }
 
             if let screenPos = worldToScreen(entity.position, camera: camera, viewSize: viewSize) {
-                newPositions[id] = CGPoint(x: screenPos.x, y: screenPos.y - 52)
+                let scale = visuals.scale ?? 1.0
+                let verticalOffset: CGFloat = -(CGFloat(scale) * label3DOffsetScaleFactor + label3DOffsetBase)
+                newPositions[id] = CGPoint(x: screenPos.x, y: screenPos.y + verticalOffset)
             }
         }
 

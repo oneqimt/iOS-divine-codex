@@ -15,41 +15,59 @@ struct ExplorerNodeButton: View {
     let node: ExplorerNode
     let isSelected: Bool
     let action: () -> Void
+    var showsDetail: Bool = true   // for 3D scene use vs compact test rows if needed
+    var useStrongerBackgroundFor3DCompact: Bool = false  // improves readability when used as floating label in 3D overlay
 
     var body: some View {
-        GlassEffectContainer {
+        // For 3D detail cards we skip the GlassEffectContainer to avoid unwanted blur/glass on the solid black card.
+        // For compact (especially 2D buttons and 3D compact labels) we use the container for proper Liquid Glass.
+        if useStrongerBackgroundFor3DCompact && isSelected && showsDetail {
             Button(action: action) {
-                NodeLabelView(title: node.name, isEmphasized: isSelected)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
+                NodeDetailView(node: node, action: action)
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
             .buttonStyle(.plain)
-            .background {
-                Capsule()
-                    .fill(Color.black.opacity(0.45))
-                    .glassEffect(.clear, in: .capsule)
-            }
+            .background(Color.clear)  // detail controls its own solid black bg
             .overlay {
-                if isSelected {
-                    Capsule()
-                        .fill(.clear)
-                        .glassEffect(
-                            .regular.tint(Theme.Colors.divineGold.opacity(0.35)).interactive(),
-                            in: .capsule
-                        )
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Theme.Colors.divineGold.opacity(0.3), lineWidth: 1)
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.75), value: isSelected)
+        } else {
+            GlassEffectContainer {
+                Button(action: action) {
+                    if isSelected && showsDetail {
+                        NodeDetailView(node: node, action: action)
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    } else {
+                        NodeLabelView(title: node.name, isEmphasized: isSelected, useStrongerBackgroundFor3D: useStrongerBackgroundFor3DCompact && !isSelected)
+                            .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    }
                 }
+                .buttonStyle(.plain)
+                .background {
+                    if isSelected && showsDetail {
+                        Color.clear
+                    } else if useStrongerBackgroundFor3DCompact {
+                        Capsule()
+                            .fill(Color.black.opacity(0.65))
+                    } else {
+                        Capsule()
+                            .fill(Color.black.opacity(0.45))
+                            .glassEffect(.clear, in: .capsule)
+                    }
+                }
+                .overlay {
+                    if isSelected && showsDetail {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Theme.Colors.divineGold.opacity(0.3), lineWidth: 1)
+                    } else {
+                        Capsule()
+                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    }
+                }
+                .animation(.spring(response: 0.4, dampingFraction: 0.75), value: isSelected)
             }
-            .overlay {
-                Capsule()
-                    .stroke(
-                        isSelected
-                            ? Theme.Colors.divineGold.opacity(0.55)
-                            : Color.white.opacity(0.12),
-                        lineWidth: isSelected ? 1.5 : 1
-                    )
-            }
-            .scaleEffect(isSelected ? 1.04 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: isSelected)
         }
     }
 }
