@@ -20,6 +20,16 @@ struct Divine_Codex_iOSApp: App {
     /// into the SwiftUI environment so any view can read its state.
     @State private var sanity: SanityViewModel
 
+    /// App-wide Explorer view model (owns the cosmology node graph + selection).
+    /// 
+    /// Initialized explicitly inside `init()` using `_explorerViewModel = State(initialValue: ...)`
+    /// (exactly like `sanity`). This ensures creation happens at a well-defined point during
+    /// App launch (after token/client setup) and avoids any subtle differences in timing or
+    /// ordering compared to a property-level default initializer. The VM loads its local
+    /// hierarchy immediately so the Explorer tab has zero creation cost on first appearance.
+    /// Injected via Environment; server data is merged from HomeView regardless of active tab.
+    @State private var explorerViewModel: ExplorerViewModel
+
     init() {
         // 1. Make sure the API token is loaded into TokenManager before we
         //    build the client. `setupToken()` lives in `secret.swift`.
@@ -42,9 +52,12 @@ struct Divine_Codex_iOSApp: App {
             token: TokenManager.shared.getToken()
         )
 
-        // 4. Wrap it in the view model. `_sanity` is the underlying storage
-        //    for the `@State` property — required when assigning from `init`.
+        // 4. Wrap the view models using the underscore storage (`_sanity`, `_explorerViewModel`).
+        //    This is required when assigning to @State properties from `init()`.
+        //    We use the same explicit `State(initialValue:)` pattern for both so that
+        //    creation timing is identical and deterministic.
         _sanity = State(initialValue: SanityViewModel(client: client))
+        _explorerViewModel = State(initialValue: ExplorerViewModel())
     }
 
     var body: some Scene {
@@ -58,11 +71,15 @@ struct Divine_Codex_iOSApp: App {
             // before showing the main interface.
             HomeView()
                 .environment(sanity)
+                .environment(explorerViewModel)
                 .task {
-                    // First connectivity smoke test — prints results to the console.
-                    // Once a real list view consumes `sanity.codices`, this `.task`
-                    // can move there (or stay here for app-launch prefetch).
-                   // await sanity.fetchCodices()
+                    // Prefetch divineCodex / emanation data at app launch.
+                    // Data is merged into the (shared) ExplorerViewModel by
+                    // HomeView (which is always in the hierarchy and observes
+                    // changes on sanity.codices). This keeps ExplorerView
+                    // initialization fast and ensures server nodes are available
+                    // even if the user visits the Explorer tab after launch.
+                    await sanity.fetchCodices()
                 }
         }
     }

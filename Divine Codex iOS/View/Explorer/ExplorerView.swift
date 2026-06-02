@@ -14,6 +14,11 @@ import SwiftUI
 /// - Provide information about what the Cosmology Explorer is and how to interact with it.
 /// - Act as a transitional "cover" between the main app and the full-screen 3D scene.
 ///
+/// The `ExplorerViewModel` is now owned at the App/Home level (injected via
+/// Environment, created early like `SanityViewModel`) so local node data is
+/// ready at launch and server data merges don't depend on this view's lifetime.
+/// This also avoids any creation cost or lag on first appearance of ExplorerView.
+///
 /// Note: The background is intentionally NOT set here. `HomeView` owns the
 /// sacred backdrop so all tabs share the same mood. When `ExplorerView` is
 /// presented standalone (e.g. previews), wrap it with `.sacredBackground()`.
@@ -22,11 +27,7 @@ import SwiftUI
 struct ExplorerView: View {
 
     @Environment(SanityViewModel.self) private var sanity
-
-    /// Local view model for the explorer experience.
-    /// In a future pass we may move ownership higher (e.g. HomeView or App)
-    /// if we need to preserve state across tab switches.
-    @State private var explorerViewModel = ExplorerViewModel()
+    @Environment(ExplorerViewModel.self) private var explorerViewModel
 
     @State private var showCosmologyScene = false
 
@@ -91,20 +92,6 @@ struct ExplorerView: View {
 
         }
         .padding(.top, Theme.Spacing.lg)
-        .onAppear {
-            // Start loading Aeons / emanations (Barbelo, Sophia, etc.) from Sanity
-            // as soon as the user lands on the Explorer tab.
-            if sanity.codices.isEmpty && !sanity.isLoading {
-                Task {
-                    await sanity.fetchCodices()
-                }
-            }
-        }
-        .onChange(of: sanity.codices) { _, newCodices in
-            // When new data arrives from Sanity, push it into the explorer view model
-            // so it can build the combined node list (local + server).
-            explorerViewModel.updateWithServerData(newCodices)
-        }
         .fullScreenCover(isPresented: $showCosmologyScene) {
             CosmoScene(explorerViewModel: explorerViewModel)
                 .onAppear {
@@ -119,5 +106,7 @@ struct ExplorerView: View {
 
 #Preview {
     ExplorerView()
+        .environment(ExplorerViewModel())
+        .environment(SanityViewModel.preview)
         .sacredBackground()
 }

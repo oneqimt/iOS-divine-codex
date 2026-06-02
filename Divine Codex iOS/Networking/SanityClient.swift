@@ -178,3 +178,28 @@ struct SanityClient: SanityClientProtocol {
         return url
     }
 }
+
+#if DEBUG
+/// A no-op client for SwiftUI previews and tests.
+/// Returns empty results for supported types (e.g. [DivineCodex]) without
+/// performing any network calls.
+struct PreviewSanityClient: SanityClientProtocol {
+    func fetch<T: Decodable & Sendable>(query: String, as type: T.Type) async throws -> T {
+        if type == [DivineCodex].self {
+            return [] as! T
+        }
+        throw NSError(
+            domain: "preview",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "No preview data configured for \(T.self)"]
+        )
+    }
+}
+
+extension SanityViewModel {
+    /// Convenience for previews and tests. Uses a client that never hits the network.
+    static var preview: SanityViewModel {
+        SanityViewModel(client: PreviewSanityClient())
+    }
+}
+#endif

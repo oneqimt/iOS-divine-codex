@@ -64,6 +64,18 @@ enum Theme {
         static let medium: CGFloat = 20
         static let large: CGFloat = 28
     }
+
+    // MARK: - Cards & Floating Overlays
+    /// Sizing guidance for cards that appear as 2D overlays on the 3D scene
+    /// (e.g. the expanded NodeDetailView that "becomes" a selected node).
+    /// Using theme constants keeps the numbers out of individual views.
+    enum Cards {
+        /// For NodeDetailView when rendered as a floating 3D-scene label/card.
+        /// The wide max allows longer descriptions (especially on iPad) without
+        /// excessive wrapping, while still keeping the card from dominating the view.
+        static let explorerDetailMinWidth: CGFloat = 100
+        static let explorerDetailMaxWidth: CGFloat = 550
+    }
 }
 
 // MARK: - Reusable "CSS class" modifiers

@@ -13,7 +13,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var selectedTab: MainTab = .home
     @Environment(SanityViewModel.self) private var sanity
-    
+    @Environment(ExplorerViewModel.self) private var explorerViewModel
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -37,6 +37,17 @@ struct HomeView: View {
             // The custom Liquid Glass tab bar floats above content.
             TabBarView(selectedTab: $selectedTab)
                 .padding(.bottom, 8)
+        }
+        // Keep the shared ExplorerViewModel in sync with server data.
+        // HomeView is the persistent root for tab navigation, so this listener
+        // is always active (unlike putting it only inside ExplorerView).
+        // The initial local hierarchy is already loaded when ExplorerViewModel
+        // is created at app launch.
+        .onAppear {
+            explorerViewModel.updateWithServerData(sanity.codices)
+        }
+        .onChange(of: sanity.codices) { _, newCodices in
+            explorerViewModel.updateWithServerData(newCodices)
         }
     }
 }
@@ -96,10 +107,14 @@ private struct HomeContentView: View {
 
 #Preview("iPhone Portrait") {
     HomeView()
+        .environment(ExplorerViewModel())
+        .environment(SanityViewModel.preview)
 }
 
 #Preview("iPhone Landscape", traits: .landscapeLeft) {
     HomeView()
+        .environment(ExplorerViewModel())
+        .environment(SanityViewModel.preview)
 }
 
 // Note: To preview on a specific device (e.g. iPad), use the device picker
@@ -107,4 +122,6 @@ private struct HomeContentView: View {
 // the `#Preview` macro.
 #Preview("iPad") {
     HomeView()
+        .environment(ExplorerViewModel())
+        .environment(SanityViewModel.preview)
 }

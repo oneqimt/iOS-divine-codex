@@ -1,8 +1,8 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 3, 2026 (CosmoScene panning/orbit/dolly + pinned detail overlays)  
-> **Current Focus**: Panning feature for CosmoScene (manual camera orbit + pinch dolly while keeping 2D ExplorerNodeButton overlays pinned via live projection)
+> **Last Updated**: June 3, 2026 (ExplorerViewModel moved to Environment + explicit State(initialValue:) in App.init() + caching to eliminate first-tab lag)  
+> **Current Focus**: Panning feature for CosmoScene + initialization perf for Explorer tab
 
 ## Current Session Focus (June 2, 2026)
 
@@ -48,6 +48,16 @@ This work brings `CosmoScene` to a stable, modern foundation using the real data
 - Pivot choice on pan entry: prefers `cameraTargetLookAt` (so orbiting a focused node feels natural).
 
 Panning is now the primary way to explore the scene once a node is selected or from overview. Scripted focus still "just works" on top of it and interrupts cleanly. Detail cards follow without extra code because they are live-projected overlays, not RealityKit attachments.
+
+**Explorer tab initialization lag follow-up**
+- Moved `@State private var explorerViewModel = ExplorerViewModel()` out of `ExplorerView` into app-level ownership (parallel to `SanityViewModel`).
+- `ExplorerViewModel` is now injected via `.environment(...)` from `Divine_Codex_iOSApp`.
+- Data sync (local + server codices merge) moved to `HomeView` (always-present tab host) using `.onAppear` + `.onChange(of: sanity.codices)`.
+- Removed all creation and sync logic from `ExplorerView` itself.
+- Added `SanityViewModel.preview` + `PreviewSanityClient` (and updated all related `#Preview`s) so the Environment requirement doesn't break canvas previews.
+- Result: any perceived cost of VM init / localHierarchy load now happens at app launch, not on first visit to the Explorer tab. Server data is merged independently of tab visibility.
+- Further ViewModel polish: introduced `ExplorerNode.localNodes` static cache (computed once) and a no-op guard in `updateWithServerData` so repeated sync calls (from HomeView .onAppear / codices changes) are essentially free and don't emit unnecessary @Observable updates.
+- Lag fully resolved: User applied (and we synced) the explicit `_explorerViewModel = State(initialValue: ExplorerViewModel())` assignment inside `App.init()` (matching the exact pattern used for `_sanity`). This gives deterministic creation timing right after token/client setup. Updated comments in Divine_Codex_iOSApp.swift. Confirmed BUILD SUCCEEDED. Explorer tab now initializes cleanly on first visit.
 
 ---
 

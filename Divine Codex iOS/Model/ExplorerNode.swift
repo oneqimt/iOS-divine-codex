@@ -83,17 +83,22 @@ enum ExplorerNode: Identifiable, Hashable {
 // MARK: - Convenience builders
 
 extension ExplorerNode {
-    /// Creates the top-level local nodes (Monad + Pleroma + Aeons)
-    static func localHierarchy() -> [ExplorerNode] {
+    /// Cached local hierarchy (Monad + Pleroma + Aeons).
+    /// Computed once (static) to avoid repeated construction/allocation on every
+    /// updateWithServerData or VM init. The seed data is stable.
+    static let localNodes: [ExplorerNode] = {
         var nodes: [ExplorerNode] = []
-
         nodes.append(.monad(LocalCosmologySeeds.monad))
         nodes.append(.pleroma(LocalCosmologySeeds.pleroma))
-
         for aeon in LocalCosmologySeeds.aeons {
             nodes.append(.aeon(aeon))
         }
-
         return nodes
+    }()
+
+    /// Returns the cached local top-level nodes.
+    /// Kept for API compatibility with existing call sites.
+    static func localHierarchy() -> [ExplorerNode] {
+        localNodes
     }
 }

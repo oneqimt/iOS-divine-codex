@@ -4,13 +4,20 @@
 //
 //  View model that drives the Cosmology Explorer experience.
 //
-//  Responsibilities (current phase):
-//  - Owns the logical graph of cosmic nodes (currently from LocalData mock)
-//  - Tracks the currently selected node
-//  - Will later coordinate loading from Sanity + the visual scene state
+//  Owned at the application root (created early in Divine_Codex_iOSApp like
+//  SanityViewModel, injected via .environment, kept in sync by HomeView's
+//  onAppear/onChange of codices). This guarantees zero creation cost on first
+//  visit to the Explorer tab and that server data is available no matter which
+//  tab is active when the prefetch completes.
 //
-//  This is intentionally lightweight to start. We can introduce UseCase/Intent
-//  boundaries later if view model synchronization becomes painful.
+//  Responsibilities (current phase):
+//  - Owns the logical graph of cosmic nodes (local stable + dynamic from Sanity)
+//  - Tracks the currently selected node
+//  - Coordinates immersive scene entry/exit (for CosmoScene)
+//
+//  Intentionally lightweight. Local node construction is cached statically
+//  (ExplorerNode.localNodes) so updateWithServerData and init do almost no work
+//  after the very first access at app launch.
 
 import Foundation
 import Observation
@@ -42,14 +49,19 @@ final class ExplorerViewModel {
     // MARK: - Data Loading
 
     /// Loads the local top of the hierarchy (Monad → Pleroma → Aeons).
+    /// Uses the cached static from ExplorerNode so the (tiny) construction of
+    /// the three seed nodes only happens once in the lifetime of the app.
     private func loadLocalHierarchy() {
-        nodes = ExplorerNode.localHierarchy()
+        nodes = ExplorerNode.localNodes
     }
 
     /// Merges server data (from Sanity) into the explorer nodes.
     /// Currently appends DivineCodex entries under the Aeon level.
     /// This will evolve as we refine how Barbelo, Sophia, and the Invisibles
     /// should be placed in the tree.
+    ///
+    /// Optimized to avoid replacing `nodes` (and thus emitting an @Observable
+    /// change notification) if the resulting list would be identical.
     func updateWithServerData(_ codices: [DivineCodex]) {
         // For now we simply convert incoming DivineCodex entries into .emanation nodes.
         // Later we can be smarter about placement (e.g. only certain slugs go under
@@ -58,8 +70,11 @@ final class ExplorerViewModel {
 
         // Replace any previous server nodes with the fresh ones.
         // Keep the local hierarchy at the top.
-        let localNodes = ExplorerNode.localHierarchy()
-        nodes = localNodes + serverNodes
+        let newNodes = ExplorerNode.localNodes + serverNodes
+
+        if newNodes != nodes {
+            nodes = newNodes
+        }
     }
 
     // MARK: - Selection

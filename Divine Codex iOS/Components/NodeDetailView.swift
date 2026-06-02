@@ -23,7 +23,7 @@ struct NodeDetailView: View {
 
             if let description = node.shortDescription {
                 Text(description)
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 14, weight: .regular))
                     .foregroundStyle(Theme.Colors.primaryText)
                     .lineLimit(6)
             }
@@ -48,7 +48,11 @@ struct NodeDetailView: View {
                         .stroke(Theme.Colors.divineGold.opacity(0.3), lineWidth: 1)
                 )
         )
-        .frame(minWidth: 220, alignment: .leading)
+        .frame(
+            minWidth: Theme.Cards.explorerDetailMinWidth,
+            maxWidth: Theme.Cards.explorerDetailMaxWidth,
+            alignment: .leading
+        )
         .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
     }
 }
