@@ -84,7 +84,7 @@ struct ExplorerView: View {
                 // Later we may want a confirmation or loading step here.
                 showCosmologyScene = true
             } label: {
-                Text("Enter the Pleroma")
+                Text("Return to Source")
                     .buttonStyle(PleromaButtonStyle())
                     .padding(.horizontal, Theme.Spacing.xl)
             }
