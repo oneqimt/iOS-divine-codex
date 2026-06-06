@@ -1,8 +1,79 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 3, 2026 (ExplorerViewModel moved to Environment + explicit State(initialValue:) in App.init() + caching to eliminate first-tab lag)  
-> **Current Focus**: Panning feature for CosmoScene + initialization perf for Explorer tab
+> **Last Updated**: June 6, 2026 (Retired 3D "planets" → platter carousel + data-bound sidebar; Sanity-only data; PortableText + media rendering; first-tab Liquid Glass lag → splash-screen plan)  
+> **Current Focus**: Build a Splash screen to absorb the first-tab Liquid Glass warmup hitch
+
+---
+
+## ⏭️ NEXT SESSION — START HERE (June 6, 2026)
+
+**We stopped to take a break. Resume with the Splash screen plan below.**
+
+### What we accomplished this session
+1. **Retired the 3D "planets" Cosmology Explorer** in favor of a much more usable design:
+   - **`CosmoPlatter.swift`** — a pure-SwiftUI horizontal **carousel** of node cards (snapping via `.scrollTargetBehavior(.viewAligned)`, focused card scales up). Bound to `selectedNode`.
+   - **`CosmoSidebar.swift`** — a 2D, scrollable, **data-bound detail pane** (title, type, short description, Portable Text body, media gallery, video). Has its own close button + empty state.
+   - **`CosmoExplorerView.swift`** — adaptive container: iPad = platter + sidebar side-by-side; iPhone = platter full-screen + sidebar as a sheet. Binds to the existing `ExplorerViewModel`.
+   - `ExplorerView` now presents `CosmoExplorerView` (NOT the old `CosmoScene`) via `.fullScreenCover`.
+   - **Tap-away-to-dismiss** the sidebar works on iPad (transparent catcher behind the carousel) and via sheet on iPhone.
+   - NOTE: old `CosmoScene.swift` (RealityKit) is left intact but **no longer used**. Candidate for deletion later.
+
+2. **Data is now Sanity-only** (no more `LocalCosmologySeeds`):
+   - `ExplorerViewModel.updateWithServerData` builds nodes purely from `emanations` (removed the `localNodes` prefix that caused duplicates).
+   - `ExplorerNode` gained an `emanationType` accessor ("monad"/"pleroma"/"aeon").
+   - **Pass 1 cleanup DONE**: deleted `LocalCosmologySeeds.swift` and the `localNodes`/`localHierarchy()` helpers. Previews now use `Emanation.sample(...)` / `Emanation.sampleSet` (added in `Emanation.swift`, `#if DEBUG`).
+   - **Pass 2 cleanup STILL TODO**: collapse `ExplorerNode` down to just the `.emanation` case and delete the local `Monad` / `Pleroma` / `Aeon` types (they're still referenced by the enum's `.monad/.pleroma/.aeon` cases).
+
+3. **Portable Text + media rendering** in the sidebar:
+   - **`PortableTextView.swift`** — renders `[PortableTextBlock]` (matches the model in `DivineCodex.swift`: `_key`, `_type`, `children: [TextSpan]`, `asset: AssetReference`, `caption`). Text spans joined; image blocks render with caption.
+   - Images use **`AsyncImage`** (intentional — modest image count; NOT porting the complex `ImageCache` from the other project unless it scales). Swap point isolated in `RemoteSanityImage` (non-private, reused by the sidebar gallery).
+   - **`SanityImageURL`** builds the Sanity CDN URL using the real `sanityProjectId` (`56v9xtca`) / `sanityDataset` from `SanityClient.swift`.
+   - ✅ Verified working: Sophia's description + a captioned image render in the sidebar.
+
+4. **Performance investigation — first Explorer tab is slow (UNRESOLVED, has a plan):**
+   - Symptom: the **first tab switch of a session** has a ~0.3–1.5s main-thread hitch. It only *looked* Explorer-specific because Explorer was tested first.
+   - Ruled OUT via methodical bisecting (timing prints): the Sanity fetch (0.44s, runs at launch), the logo image, custom fonts (they're system fonts), `ExplorerView` construction, the spring animation.
+   - **Root cause identified**: the FIRST animated **Liquid Glass `matchedGeometryEffect` transition** of the tab bar's selected capsule compiles its render pipeline on first use (one-time cost). Dropping `.interactive()` helped but did NOT fully fix it.
+   - Better on a **real device** than Simulator, but still **inconsistent** (confirmed by Dennis: "It is better, but inconsistent").
+   - `GlassWarmupView` attempts (off-screen real `TabBarView`, then driving an animated transition) were unreliable — the system can optimize away hidden warmups, so they don't consistently compile the pipeline.
+
+### ✅ DECISION: build a Splash screen to absorb the warmup
+We will adopt the **`AnimatedSplashView` pattern** from the prior "Sacred Sites" project (saved as `REFERENCE_SacredSites_Splash.swift` — commented out, reference only).
+
+**Recommended approach — "warm underneath" (Option A):**
+```swift
+ZStack {
+    HomeView()                         // real app, alive + warming up, hidden below
+    if !initialRenderComplete {
+        SplashView { initialRenderComplete = true }  // opaque cover on top
+    }
+}
+```
+- Keep `HomeView` (the real `TabBarView`) ALIVE behind an opaque splash so the glass transition pipeline warms on the *real* view.
+- During the splash, drive ONE real tab transition to compile the `matchedGeometryEffect` glass move.
+- Splash dismisses after `max(branding minimum, warmup complete)` → reveal a warm tab bar → first tap is instant.
+- Then **delete `GlassWarmupView-Home.swift`** (fold its logic into the splash period).
+
+**Adapt for Divine Codex (do NOT copy Sacred Sites verbatim):**
+- Use modern `@Observable` + `.environment(...)` (NOT `@StateObject`/`@EnvironmentObject`).
+- Use `Theme.Colors` / `Theme.Fonts`, the `"logo"` asset, and the existing tagline **"Ancient wisdom reawakened"**.
+- Place the splash gate at the App/root level (`Divine_Codex_iOSApp` → wrap `HomeView`).
+- Open questions for Dennis: keep the progress spinner or go more minimal? Fixed duration vs. warmup-complete?
+
+### Cleanup still owed (diagnostics from the perf hunt)
+- `TabBarView.swift`: ✅ restored `withAnimation`; selected indicator now uses **non-interactive** tinted glass (kept — looks right, cheaper). Diagnostic print removed.
+- `SanityViewModel.swift`: still has an elapsed-time `logger.info` + `print` in `fetchEmanations` (handy; remove anytime).
+- `ExplorerView.swift` / `HomeView.swift`: timing prints already removed.
+- `GlassWarmupView-Home.swift`: currently in use but **to be deleted** once the splash replaces it.
+- `REFERENCE_SacredSites_Splash.swift`: reference only — delete whenever.
+
+### Quick orientation for "where things are"
+- Explorer entry: `ExplorerView` → `.fullScreenCover` → `CosmoExplorerView` → `CosmoPlatter` + `CosmoSidebar`.
+- Data: `Divine_Codex_iOSApp` creates `SanityViewModel` + `ExplorerViewModel` (Environment) → `HomeView.onAppear`/`onChange` feeds `sanity.emanations` into `explorerViewModel.updateWithServerData`.
+- Sanity image URL: `SanityImageURL.url(forAssetRef:)` in `PortableTextView.swift`.
+
+---
 
 ## Current Session Focus (June 2, 2026)
 
