@@ -37,19 +37,6 @@ enum ExplorerNode: Identifiable, Hashable {
         }
     }
 
-    /// The emanation type as a lowercased string ("monad", "pleroma", "aeon").
-    /// Drives layout fallbacks in the scene when Sanity `explorer.position`
-    /// data is missing. Local nodes report their type directly; server
-    /// emanations use their `type` field.
-    var emanationType: String? {
-        switch self {
-        case .monad:            return "monad"
-        case .pleroma:          return "pleroma"
-        case .aeon:             return "aeon"
-        case .emanation(let e): return e.type?.lowercased()
-        }
-    }
-
     var shortDescription: String? {
         switch self {
         case .monad(let m):     return m.shortDescription
@@ -88,28 +75,5 @@ enum ExplorerNode: Identifiable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-    }
-}
-
-// MARK: - Convenience builders
-
-extension ExplorerNode {
-    /// Cached local hierarchy (Monad + Pleroma + Aeons).
-    /// Computed once (static) to avoid repeated construction/allocation on every
-    /// updateWithServerData or VM init. The seed data is stable.
-    static let localNodes: [ExplorerNode] = {
-        var nodes: [ExplorerNode] = []
-        nodes.append(.monad(LocalCosmologySeeds.monad))
-        nodes.append(.pleroma(LocalCosmologySeeds.pleroma))
-        for aeon in LocalCosmologySeeds.aeons {
-            nodes.append(.aeon(aeon))
-        }
-        return nodes
-    }()
-
-    /// Returns the cached local top-level nodes.
-    /// Kept for API compatibility with existing call sites.
-    static func localHierarchy() -> [ExplorerNode] {
-        localNodes
     }
 }
