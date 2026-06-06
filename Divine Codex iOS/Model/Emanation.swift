@@ -150,3 +150,55 @@ extension ExplorerVisuals {
         )
     }
 }
+// MARK: - Sample data (previews & development only)
+
+#if DEBUG
+extension Emanation {
+    /// A reusable sample node for SwiftUI previews and in-progress UI work.
+    /// Mirrors the shape of real Sanity data without requiring a network call.
+    static func sample(
+        id: String = "sample-sophia",
+        name: String = "Sophia",
+        type: String = "Aeon",
+        shortDescription: String? = "Divine Wisdom. The lowest of the 24 Invisibles who, in her longing, descended and brought the Divine Spark into the lower realms."
+    ) -> Emanation {
+        Emanation(
+            id: id,
+            name: name,
+            slug: name.lowercased(),
+            gender: .feminine,
+            order: 1,
+            type: type,
+            parentId: "sample-pleroma",
+            consortId: nil,
+            explorer: Explorer(
+                layerOrder: 30,
+                position: Position(x: -4, y: 0.5, z: -1.5),
+                color: "#C026D3",
+                scale: 1.0,
+                isVisibleByDefault: true,
+                geometryHint: "sphere"
+            ),
+            shortDescription: shortDescription,
+            description: nil,
+            media: nil,
+            video: nil
+        )
+    }
+
+    /// A small set of sample nodes (Monad, Pleroma, and a few Aeons) for
+    /// previewing carousels and multi-node layouts.
+    static let sampleSet: [Emanation] = [
+        .sample(id: "sample-monad", name: "Monad", type: "Monad",
+                shortDescription: "The Ineffable Source. The One beyond all names and forms."),
+        .sample(id: "sample-pleroma", name: "Pleroma", type: "Pleroma",
+                shortDescription: "The Fullness. The divine realm of perfect unity and emanation."),
+        .sample(id: "sample-barbelo", name: "Barbelo", type: "Aeon",
+                shortDescription: "The first emanation of the Monad. The Womb of the All."),
+        .sample(id: "sample-sophia", name: "Sophia", type: "Aeon"),
+        .sample(id: "sample-christos", name: "Christos", type: "Aeon",
+                shortDescription: "The Anointed. The revealer who descends to awaken the forgotten Spark.")
+    ]
+}
+#endif
+

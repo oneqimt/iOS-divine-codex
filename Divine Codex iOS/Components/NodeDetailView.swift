@@ -58,11 +58,14 @@ struct NodeDetailView: View {
 }
 
 // MARK: - Preview
+
+#if DEBUG
 #Preview {
     NodeDetailView(
-        node: .monad(LocalCosmologySeeds.monad),
+        node: .emanation(.sample(name: "Monad", type: "Monad")),
         action: {}
     )
     .padding()
     .background(Theme.Colors.background)
 }
+#endif

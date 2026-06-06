@@ -93,7 +93,7 @@ struct ExplorerView: View {
         }
         .padding(.top, Theme.Spacing.lg)
         .fullScreenCover(isPresented: $showCosmologyScene) {
-            CosmoScene(explorerViewModel: explorerViewModel)
+            CosmoExplorerView(explorerViewModel: explorerViewModel)
                 .onAppear {
                     explorerViewModel.didEnterImmersiveScene()
                 }

@@ -74,9 +74,10 @@ struct ExplorerNodeButton: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("Unselected") {
     ExplorerNodeButton(
-        node: .monad(LocalCosmologySeeds.monad),
+        node: .emanation(.sample(name: "Monad", type: "Monad")),
         isSelected: false,
         action: {}
     )
@@ -86,10 +87,11 @@ struct ExplorerNodeButton: View {
 
 #Preview("Selected") {
     ExplorerNodeButton(
-        node: .pleroma(LocalCosmologySeeds.pleroma),
+        node: .emanation(.sample(name: "Pleroma", type: "Pleroma")),
         isSelected: true,
         action: {}
     )
     .padding()
     .background(Color.black)
 }
+#endif
