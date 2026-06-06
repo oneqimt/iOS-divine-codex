@@ -82,6 +82,19 @@ struct CosmoExplorerView: View {
     private var platter: some View {
         ZStack {
             Theme.Colors.background.ignoresSafeArea()
+
+            // Tap-away-to-dismiss: a background catcher behind the carousel.
+            // It only intercepts taps when a node is selected, and sits *below*
+            // CosmoPlatter so card taps (selection) still take precedence.
+            if explorerViewModel.selectedNode != nil {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        explorerViewModel.clearSelection()
+                    }
+                    .ignoresSafeArea()
+            }
+
             CosmoPlatter(
                 nodes: nodes,
                 selection: Binding(

@@ -57,6 +57,7 @@ final class SanityViewModel {
         errorMessage = nil
         defer { isLoading = false }
 
+        let startTime = Date()
         // GROQ: every emanation, ordered by traditional sequence. References
         // are flattened to ids (`parentId`, `consortId`) and the type name is
         // projected so the tree can be rebuilt in Swift. See IN_PROGRESS.md.
@@ -74,9 +75,9 @@ final class SanityViewModel {
         do {
             let results = try await client.fetch(query: query, as: [Emanation].self)
             emanations = results
-            logger.info("Fetched \(results.count, privacy: .public) emanations.")
-            // Early-development visibility — remove once we render in a view.
-            print("✅ Fetched \(results.count) emanations:")
+            let elapsed = Date().timeIntervalSince(startTime)
+            logger.info("Fetched \(results.count, privacy: .public) emanations in \(elapsed, privacy: .public)s.")
+            print("✅ Fetched \(results.count) emanations in \(String(format: "%.2f", elapsed))s:")
             for emanation in results {
                 print(" • \(emanation.name ?? "(unnamed)") — type: \(emanation.type ?? "?"), parent: \(emanation.parentId ?? "none")")
             }

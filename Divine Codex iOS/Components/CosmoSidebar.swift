@@ -50,17 +50,7 @@ struct CosmoSidebar: View {
                 }
 
                 // MARK: Rich body (Portable Text)
-                //
-                // Drop your existing PortableTextBlock renderer in here. The
-                // blocks live on the underlying Emanation:
-                //
-                //   if case let .emanation(e) = node, let blocks = e.description {
-                //       PortableTextView(blocks: blocks)
-                //   }
-                //
-                // Left as a placeholder for now so this compiles without the
-                // renderer wired up.
-                bodyPlaceholder(for: node)
+                bodySection(for: node)
 
                 // MARK: Media
                 mediaSection(for: node)
@@ -96,14 +86,11 @@ struct CosmoSidebar: View {
     }
 
     @ViewBuilder
-    private func bodyPlaceholder(for node: ExplorerNode) -> some View {
+    private func bodySection(for node: ExplorerNode) -> some View {
         if case let .emanation(emanation) = node,
-           emanation.description != nil {
-            // TODO: Replace with your PortableTextBlock renderer.
-            Text("Rich detail content goes here.")
-                .font(.system(size: 15))
-                .foregroundStyle(Theme.Colors.primaryText.opacity(0.6))
-                .italic()
+           let blocks = emanation.description,
+           !blocks.isEmpty {
+            PortableTextView(blocks: blocks, textFont: .body)
         }
     }
 
@@ -118,13 +105,36 @@ struct CosmoSidebar: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
 
-            // Image gallery placeholder — wire to your asset/image loader.
+            // Image gallery: render each media item with its caption.
             if let media = emanation.media, !media.isEmpty {
-                Text("\(media.count) image\(media.count == 1 ? "" : "s")")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.Colors.primaryText.opacity(0.5))
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(media.enumerated()), id: \.offset) { _, item in
+                        mediaImage(item)
+                    }
+                }
             }
         }
+    }
+
+    private func mediaImage(_ item: SanityMedia) -> some View {
+        VStack(alignment: .center, spacing: 8) {
+            RemoteSanityImage(assetRef: item.asset._ref)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+
+            if let caption = item.caption {
+                Text(caption)
+                    .font(.caption)
+                    .foregroundStyle(Theme.Colors.secondaryText)
+                    .italic()
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+        }
+        // Accessibility: prefer the alt text when present.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(item.alt ?? item.caption ?? "Image")
     }
 
     // MARK: - Empty State

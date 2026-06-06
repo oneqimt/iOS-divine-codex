@@ -35,11 +35,11 @@ struct ExplorerView: View {
         VStack(spacing: Theme.Spacing.xl) {
             // Hero / Logo area
             VStack(spacing: Theme.Spacing.md) {
-                Image("logo")
+                /*Image("logo")
                     .resizable()
                     .scaledToFit()
                     .frame(maxHeight: 180)
-                    .padding(.horizontal, Theme.Spacing.xl)
+                    .padding(.horizontal, Theme.Spacing.xl)*/
 
                 Text("The Cosmology Explorer")
                     .sacredHeading()
@@ -92,6 +92,12 @@ struct ExplorerView: View {
 
         }
         .padding(.top, Theme.Spacing.lg)
+        .onAppear {
+            print("⏱️ ExplorerView.onAppear at \(Date().timeIntervalSince1970)")
+        }
+        .task {
+            print("⏱️ ExplorerView.task (first render) at \(Date().timeIntervalSince1970)")
+        }
         .fullScreenCover(isPresented: $showCosmologyScene) {
             CosmoExplorerView(explorerViewModel: explorerViewModel)
                 .onAppear {

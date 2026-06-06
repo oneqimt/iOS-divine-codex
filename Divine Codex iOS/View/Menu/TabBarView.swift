@@ -56,10 +56,14 @@ struct TabBarView: View {
         .buttonStyle(.plain)
         .background {
             if isSelected {
+                // Non-interactive tinted glass: keeps the Liquid Glass look for
+                // the sliding selection indicator without the costly real-time
+                // `.interactive()` sampling, which caused a ~1s first-render
+                // hitch on the first tab switch of a session.
                 Capsule()
                     .fill(.clear)
                     .glassEffect(
-                        .regular.tint(Theme.Colors.accent.opacity(0.75)).interactive(),
+                        .regular.tint(Theme.Colors.accent.opacity(0.75)),
                         in: .capsule
                     )
                     .matchedGeometryEffect(id: "selectedTab", in: glassNamespace)

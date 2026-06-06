@@ -21,6 +21,10 @@ struct HomeView: View {
             Theme.Colors.background
                 .ignoresSafeArea()
 
+            // Warm up the Liquid Glass render pipeline at launch so the user's
+            // first tab switch doesn't pay the one-time initialization cost.
+            GlassWarmupView()
+
             // Content area — swaps based on the selected tab.
             Group {
                 switch selectedTab {
