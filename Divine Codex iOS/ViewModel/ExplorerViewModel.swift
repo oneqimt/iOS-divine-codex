@@ -56,17 +56,17 @@ final class ExplorerViewModel {
     }
 
     /// Merges server data (from Sanity) into the explorer nodes.
-    /// Currently appends DivineCodex entries under the Aeon level.
+    /// Currently appends `Emanation` entries under the local hierarchy.
     /// This will evolve as we refine how Barbelo, Sophia, and the Invisibles
-    /// should be placed in the tree.
+    /// should be placed in the tree (e.g. via `parentId`).
     ///
     /// Optimized to avoid replacing `nodes` (and thus emitting an @Observable
     /// change notification) if the resulting list would be identical.
-    func updateWithServerData(_ codices: [DivineCodex]) {
-        // For now we simply convert incoming DivineCodex entries into .emanation nodes.
-        // Later we can be smarter about placement (e.g. only certain slugs go under
-        // specific Aeons, filtering, ordering via explorer.layerOrder, etc.).
-        let serverNodes = codices.map { ExplorerNode.emanation($0) }
+    func updateWithServerData(_ emanations: [Emanation]) {
+        // For now we simply convert incoming Emanation entries into .emanation nodes.
+        // Later we can be smarter about placement using `parentId` / `consortId`,
+        // filtering, and ordering via explorer.layerOrder.
+        let serverNodes = emanations.map { ExplorerNode.emanation($0) }
 
         // Replace any previous server nodes with the fresh ones.
         // Keep the local hierarchy at the top.

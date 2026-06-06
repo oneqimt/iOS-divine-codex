@@ -27,8 +27,10 @@ final class SanityViewModel {
 
     // MARK: State
 
-    /// All `DivineCodex` documents currently loaded.
-    var codices: [DivineCodex] = []
+    /// All `emanation` nodes currently loaded (Monad, Pleroma, Aeons).
+    /// This is the flat list as returned from Sanity; the node tree is
+    /// reassembled elsewhere from `parentId` / `consortId`.
+    var emanations: [Emanation] = []
 
     /// `true` while a network request is in flight.
     var isLoading: Bool = false
@@ -48,30 +50,41 @@ final class SanityViewModel {
 
     // MARK: Queries
 
-    /// Fetches every `divineCodex` document from Sanity, ordered by title.
-    /// Updates `codices` on success or `errorMessage` on failure.
-    func fetchCodices() async {
+    /// Fetches every `emanation` node from Sanity, ordered by `order`.
+    /// Updates `emanations` on success or `errorMessage` on failure.
+    func fetchEmanations() async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
-        // GROQ: every divineCodex, ordered alphabetically by title.
-        let query = #"*[_type == "divineCodex"] | order(title asc)"#
+        // GROQ: every emanation, ordered by traditional sequence. References
+        // are flattened to ids (`parentId`, `consortId`) and the type name is
+        // projected so the tree can be rebuilt in Swift. See IN_PROGRESS.md.
+        let query = """
+        *[_type == "emanation"] | order(order asc){
+          _id, name, "slug": slug.current, gender, order,
+          "type": emanationType->name,
+          "parentId": parent._ref,
+          "consortId": consort._ref,
+          explorer{ layerOrder, position, color, scale, isVisibleByDefault, geometryHint },
+          shortDescription, description, media, video
+        }
+        """
 
         do {
-            let results = try await client.fetch(query: query, as: [DivineCodex].self)
-            codices = results
-            logger.info("Fetched \(results.count, privacy: .public) codices.")
+            let results = try await client.fetch(query: query, as: [Emanation].self)
+            emanations = results
+            logger.info("Fetched \(results.count, privacy: .public) emanations.")
             // Early-development visibility — remove once we render in a view.
-            print("✅ Fetched \(results.count) codices:")
-            for codex in results {
-                print(" • \(codex.title ?? "(untitled)") — slug: \(codex.slug.current)")
+            print("✅ Fetched \(results.count) emanations:")
+            for emanation in results {
+                print(" • \(emanation.name ?? "(unnamed)") — type: \(emanation.type ?? "?"), parent: \(emanation.parentId ?? "none")")
             }
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             errorMessage = message
-            logger.error("fetchCodices failed: \(message, privacy: .public)")
-            print("❌ fetchCodices failed: \(message)")
+            logger.error("fetchEmanations failed: \(message, privacy: .public)")
+            print("❌ fetchEmanations failed: \(message)")
         }
     }
 }

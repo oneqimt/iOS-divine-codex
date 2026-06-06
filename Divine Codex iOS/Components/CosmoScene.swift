@@ -240,7 +240,7 @@ struct CosmoScene: View {
         }
         .onAppear {
             explorerViewModel.didEnterImmersiveScene()
-            print("Sanity codices count: \(sanity.codices.count)")
+            print("Sanity emanations count: \(sanity.emanations.count)")
             print("ExplorerViewModel nodes count: \(explorerViewModel.nodes.count)")
         }
         .onDisappear {

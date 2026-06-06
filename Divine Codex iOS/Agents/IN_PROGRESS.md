@@ -183,7 +183,64 @@ The button is now in a good state for the next phase of work: binding real `Expl
 - Currently on Free tier.
 **Sanity Studio created and deployed** (May 29, 2026) with initial schema and seeded content. See detailed implementation section below.
 
-### Sanity Schema – Current Direction (First Iteration)
+### Sanity Schema – Current Implementation (June 6, 2026) ✅ AUTHORITATIVE
+
+> This section supersedes the May 29 "Actual Implementation" section below.
+
+**Key decision:** the app renders a node tree, so the data is a node tree. The `emanation` self-reference (`parent`) is the backbone; `divineCodex` was removed as redundant.
+
+**Hierarchy (how it maps to the 3D scene):**
+
+```
+Monad      → emanation, emanationType "Monad",  parent = null   (root node)
+Pleroma    → emanation, emanationType "Pleroma", parent = Monad  (first child)
+12 Aeons   → emanation, emanationType "Aeon",    parent = Pleroma  ┐
+12 consorts→ emanation, emanationType "Aeon",    parent = Pleroma  ┘ 24 second-child nodes
+                                                 consort ↔ links each pair
+```
+
+**Document Types (current):**
+
+| Type            | Purpose                                                                 |
+|-----------------|-------------------------------------------------------------------------|
+| `emanation`     | **The spine.** Cosmological nodes (Monad, Pleroma, Aeons). Drives the 3D scene AND carries its own detail content. |
+| `emanationType` | Taxonomy. Currently only: **Monad, Pleroma, Aeon** (The One & Syzygy removed). |
+| `frequency`     | Sacred utterances / meditation sounds.                                  |
+| ~~`divineCodex`~~ | **Removed.** Was the editorial layer; made redundant once `emanation` became self-contained. Reversible via git if a long-form "teachings" layer is wanted later. |
+
+**`emanation` fields (relevant changes):**
+- `parent` → self-reference (hierarchy).
+- `consort` → self-reference for syzygy pairs (**renamed from `counterpart`**). Stored as "consort"; surfaced as "Syzygy" in the app. Set on both members.
+- `order` → number; traditional sequence among siblings (the 12 syzygies). Distinct from `explorer.layerOrder` (z-depth).
+- `gender` → masculine / feminine / neutral / pair.
+- `shortDescription`, `description` (Portable Text) → detail text.
+- `media` → array of images (caption + alt) for the detail view. **(new)**
+- `video` → object: `url` (HLS/MP4), `posterImage`, `provider`. External host (Mux/Cloudflare/Vimeo/etc.) — Sanity only hosts video on Enterprise. AVPlayer plays HLS natively on iOS. **(new)**
+- `explorer` → unchanged: `layerOrder`, `position {x,y,z}`, `color` (hex), `scale`, `isVisibleByDefault`, `geometryHint`.
+
+**Relationships:**
+- `emanation.parent` → self (hierarchy)
+- `emanation.consort` → self (syzygy pair)
+- `emanation.emanationType` → `emanationType`
+- `frequency.associatedEmanations` → array of `emanation` (frequency↔emanation link survives independently of the removed divineCodex)
+
+**Studio structure (`studioStructure.ts`):** nav now leads with **Cosmology** (Emanations + Emanation Types), then Frequencies & Utterances.
+
+**Retrieval (confirmed):** one flat GROQ query returns all emanations with explorer data + `parentId`/`consortId`; build the tree in Swift. Map `position{x,y,z}` → `SIMD3<Float>`, `color` hex → `UIColor`, `geometryHint` → `MeshResource`.
+
+```groq
+*[_type == "emanation"] | order(order asc){
+  _id, name, "slug": slug.current, gender, order,
+  "type": emanationType->name,
+  "parentId": parent._ref,
+  "consortId": consort._ref,
+  explorer{ layerOrder, position, color, scale, isVisibleByDefault, geometryHint },
+  shortDescription, media, video
+}
+```
+
+**Current dataset state (test data):** types = Monad / Pleroma / Aeon. Emanations = The One (→Monad), Autogenes / Barbelo / Sophia / Christos (→Aeon). Old broken parent/counterpart refs were cleared. Real backbone nodes (Monad/Pleroma emanations) + the 24 Aeon pairs not yet seeded.
+
 
 **Core Documents:**
 - `divineCodex` → Primary flexible content document (editorial layer). This will be the main document used for most content and detail views.
@@ -272,5 +329,6 @@ These fields were explicitly designed to feed the RealityKit Cosmology Explorer.
 - Collaborate on refining the schema as the RealityKit Cosmology Explorer is built (new explorer fields, additional relationships, etc.).
 - Build and style the real custom Liquid Glass `TabBarView`.
 - Wire up the TabBar into `HomeView` and implement basic navigation between Home / Explorer / Search / Settings.
+
 
 

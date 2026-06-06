@@ -44,10 +44,10 @@ struct HomeView: View {
         // The initial local hierarchy is already loaded when ExplorerViewModel
         // is created at app launch.
         .onAppear {
-            explorerViewModel.updateWithServerData(sanity.codices)
+            explorerViewModel.updateWithServerData(sanity.emanations)
         }
-        .onChange(of: sanity.codices) { _, newCodices in
-            explorerViewModel.updateWithServerData(newCodices)
+        .onChange(of: sanity.emanations) { _, newEmanations in
+            explorerViewModel.updateWithServerData(newEmanations)
         }
     }
 }

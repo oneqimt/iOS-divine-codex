@@ -73,13 +73,13 @@ struct Divine_Codex_iOSApp: App {
                 .environment(sanity)
                 .environment(explorerViewModel)
                 .task {
-                    // Prefetch divineCodex / emanation data at app launch.
+                    // Prefetch emanation data at app launch.
                     // Data is merged into the (shared) ExplorerViewModel by
                     // HomeView (which is always in the hierarchy and observes
-                    // changes on sanity.codices). This keeps ExplorerView
+                    // changes on sanity.emanations). This keeps ExplorerView
                     // initialization fast and ensures server nodes are available
                     // even if the user visits the Explorer tab after launch.
-                    await sanity.fetchCodices()
+                    await sanity.fetchEmanations()
                 }
         }
     }

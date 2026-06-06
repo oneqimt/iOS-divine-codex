@@ -4,11 +4,12 @@
 //
 //  A unified representation of a node in the Cosmology Explorer scene.
 //  This allows us to mix local stable data (Monad, Pleroma, Aeon) with
-//  dynamic content coming from Sanity (DivineCodex entries such as Barbelo,
+//  dynamic content coming from Sanity (`Emanation` entries such as Barbelo,
 //  Sophia, and the other Invisibles).
 //
 
 import Foundation
+import simd
 
 /// Represents a single node in the explorer hierarchy that can be rendered
 /// in the RealityKit scene and displayed in detail overlays.
@@ -16,7 +17,7 @@ enum ExplorerNode: Identifiable, Hashable {
     case monad(Monad)
     case pleroma(Pleroma)
     case aeon(Aeon)
-    case emanation(DivineCodex)
+    case emanation(Emanation)
 
     var id: String {
         switch self {
@@ -32,7 +33,7 @@ enum ExplorerNode: Identifiable, Hashable {
         case .monad(let m):     return m.name
         case .pleroma(let p):   return p.name
         case .aeon(let a):      return a.name
-        case .emanation(let e): return e.title ?? "Untitled"
+        case .emanation(let e): return e.name ?? "Untitled"
         }
     }
 
@@ -41,7 +42,7 @@ enum ExplorerNode: Identifiable, Hashable {
         case .monad(let m):     return m.shortDescription
         case .pleroma(let p):   return p.shortDescription
         case .aeon(let a):      return a.shortDescription
-        case .emanation(let e): return e.title   // DivineCodex currently uses title; shortDescription can be added later
+        case .emanation(let e): return e.shortDescription
         }
     }
 
@@ -51,20 +52,17 @@ enum ExplorerNode: Identifiable, Hashable {
         case .monad(let m):     return m.explorer
         case .pleroma(let p):   return p.explorer
         case .aeon(let a):      return a.explorer
-        case .emanation(_):
-            // DivineCodex can carry explorer overrides in its explorer field
-            // For now we return nil — we'll map this properly once we have
-            // the actual explorer data coming from Sanity for Barbelo/Sophia.
-            return nil
+        case .emanation(let e): return e.explorer.map(ExplorerVisuals.init(from:))
         }
     }
 
     /// Parent relationship for building the tree.
-    /// Only Aeon currently carries a parentId in our local model.
+    /// Local Aeons carry a parentId; server emanations carry `parentId` directly.
     var parentId: String? {
         switch self {
-        case .aeon(let a): return a.parentId
-        default:           return nil
+        case .aeon(let a):      return a.parentId
+        case .emanation(let e): return e.parentId
+        default:                return nil
         }
     }
 
