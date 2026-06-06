@@ -37,6 +37,19 @@ enum ExplorerNode: Identifiable, Hashable {
         }
     }
 
+    /// The emanation type as a lowercased string ("monad", "pleroma", "aeon").
+    /// Drives layout fallbacks in the scene when Sanity `explorer.position`
+    /// data is missing. Local nodes report their type directly; server
+    /// emanations use their `type` field.
+    var emanationType: String? {
+        switch self {
+        case .monad:            return "monad"
+        case .pleroma:          return "pleroma"
+        case .aeon:             return "aeon"
+        case .emanation(let e): return e.type?.lowercased()
+        }
+    }
+
     var shortDescription: String? {
         switch self {
         case .monad(let m):     return m.shortDescription

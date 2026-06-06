@@ -53,15 +53,26 @@ struct CosmoScene: View {
     @State private var isUserPanning = false
     @State private var accumulatedYaw: Float = 0
     @State private var accumulatedPitch: Float = 0
-    @State private var orbitDistance: Float = 30
+    @State private var orbitDistance: Float = 38
     @State private var lastDragTranslation: CGSize = .zero
     @State private var lastMagnification: CGFloat = 1.0
     @State private var userOrbitPivot: SIMD3<Float> = .zero
 
+    // MARK: - Layout Source
+
+    /// While cosmology positions are still being authored in Sanity, set this to
+    /// `false` to ignore Sanity's `explorer.position` and use the computed
+    /// fallback layout (Monad → Pleroma → Aeon ring) for every node. Flip back
+    /// to `true` once real coordinates have been entered in Sanity.
+    private let usesSanityPositions = false
+
     // MARK: - Default Camera
 
-    private let defaultCameraPosition = SIMD3<Float>(0, 11, 30)
-    private let defaultCameraLookAt = SIMD3<Float>(0, 9, 0)
+    // Framed so the centered Monad → Pleroma → Aeon-ring layout sits in the
+    // middle of the viewport. Look-at targets the vertical center of the
+    // arrangement; the camera is pulled back enough to fit the wide Aeon ring.
+    private let defaultCameraPosition = SIMD3<Float>(0, 8, 38)
+    private let defaultCameraLookAt = SIMD3<Float>(0, 8, 0)
 
     // === TUNING KNOBS for compact 3D node labels (initial state) ===
     // These control the vertical "top padding" / space above the label relative to the 3D sphere center.
@@ -94,11 +105,21 @@ struct CosmoScene: View {
                                     light.position = [0, 12, 0]
                                     root.addChild(light)
 
-                                    // Create entities from the modern data model
+                                    // Create entities from the modern data model.
+                                    // Aeons are spread evenly in a ring as a layout
+                                    // fallback, so pre-compute each Aeon's index.
                                     var entityMap: [String: Entity] = [:]
 
+                                    let aeonNodes = explorerViewModel.nodes.filter {
+                                        $0.emanationType == "aeon"
+                                    }
+                                    let aeonCount = aeonNodes.count
+
                                     for node in explorerViewModel.nodes {
-                                        if let entity = makeEntity(for: node) {
+                                        let aeonIndex = aeonNodes.firstIndex(where: { $0.id == node.id })
+                                        if let entity = makeEntity(for: node,
+                                                                   aeonIndex: aeonIndex,
+                                                                   aeonCount: aeonCount) {
                                             root.addChild(entity)
                                             entityMap[node.id] = entity
                                         }
@@ -284,10 +305,23 @@ struct CosmoScene: View {
 
     // MARK: - Entity Creation (updated for new data model)
 
-    private func makeEntity(for node: ExplorerNode) -> Entity? {
+    /// Builds a node entity.
+    ///
+    /// Position and scale come from Sanity (`explorer`) when available. When
+    /// `explorer.position` is missing, we fall back to a sensible layout based
+    /// on emanation type so the nodes don't all stack at the origin:
+    ///   - Monad sits at the top of the cosmos
+    ///   - Pleroma sits just below it
+    ///   - Aeons spread evenly around a ring beneath the Pleroma
+    private func makeEntity(for node: ExplorerNode,
+                            aeonIndex: Int?,
+                            aeonCount: Int) -> Entity? {
         guard let visuals = node.explorer else { return nil }
 
-        let radius: Float = (visuals.scale ?? 1.0) * 0.5
+        // Size is driven by emanation type for now (Sanity `scale` is honored
+        // when present). Clear hierarchy: Monad largest, then Pleroma, then the
+        // Aeons all equal and smaller.
+        let radius: Float = nodeRadius(for: node, visuals: visuals)
 
         let mesh: MeshResource = switch visuals.geometryHint {
         case "sphere", "light": .generateSphere(radius: radius)
@@ -302,12 +336,91 @@ struct CosmoScene: View {
 
         let entity = ModelEntity(mesh: mesh, materials: [material])
         entity.name = node.id
-        entity.position = visuals.worldPosition
+
+        // Prefer an explicit Sanity position only when `usesSanityPositions` is
+        // enabled AND the value is "real" (non-origin). While positions are
+        // still being authored, `usesSanityPositions` is false so every node
+        // uses the computed fallback layout — otherwise the placeholder Sanity
+        // coordinates cluster the nodes into the "molecule" look.
+        if usesSanityPositions,
+           let position = visuals.position,
+           simd_length(position) > 0.01 {
+            entity.position = position
+        } else {
+            entity.position = fallbackPosition(for: node,
+                                               aeonIndex: aeonIndex,
+                                               aeonCount: aeonCount)
+        }
+
+        #if DEBUG
+        print("🌐 \(node.name) [\(node.emanationType ?? "?")] → pos \(entity.position), r \(radius), sanityPos \(String(describing: visuals.position))")
+        #endif
 
         entity.components.set(NodeIdentifierComponent(nodeId: node.id))
         entity.components.set(CollisionComponent(shapes: [.generateSphere(radius: radius * 1.25)]))
 
         return entity
+    }
+
+    /// A layout used when a node has no explicit `explorer.position` in Sanity.
+    /// Centers the arrangement vertically around the camera's look-at height so
+    /// the whole cosmology sits in the middle of the viewport, with generous
+    /// spacing between layers.
+    ///
+    /// Layout (top → bottom): Monad, Pleroma, then a wide ring of Aeons.
+    private func fallbackPosition(for node: ExplorerNode,
+                                  aeonIndex: Int?,
+                                  aeonCount: Int) -> SIMD3<Float> {
+        // Vertical center of the arrangement. Matches the camera look-at so the
+        // scene is framed in the middle of the viewport.
+        let centerY = layoutCenterY
+
+        switch node.emanationType {
+        case "monad":
+            // Highest node, sitting above center.
+            return SIMD3<Float>(0, centerY + 9, 0)
+        case "pleroma":
+            // Just below the Monad.
+            return SIMD3<Float>(0, centerY + 3, 0)
+        case "aeon":
+            // Spread Aeons evenly around a wide horizontal ring below center.
+            // A half-step phase offset keeps the first node off the exact
+            // camera axis, and a gentle vertical stagger prevents the ring from
+            // ever collapsing into a single cluster when viewed near edge-on.
+            let count = max(aeonCount, 1)
+            let index = aeonIndex ?? 0
+            let phase = Float(index) / Float(count)
+            let angle = phase * 2 * .pi + (.pi / Float(count))
+            let ringRadius: Float = 14.0
+            let verticalStagger: Float = (index % 2 == 0) ? 1.0 : -1.0
+            return SIMD3<Float>(
+                ringRadius * cos(angle),
+                centerY - 5 + verticalStagger,
+                ringRadius * sin(angle)
+            )
+        default:
+            return SIMD3<Float>(0, centerY, 0)
+        }
+    }
+
+    /// The vertical center of the cosmology layout. The camera looks here and
+    /// the Monad/Pleroma/Aeons are arranged around it, keeping everything
+    /// centered in the viewport.
+    private var layoutCenterY: Float { 6 }
+
+    /// Radius for a node's primitive. Honors Sanity `scale` when present;
+    /// otherwise uses a type-based hierarchy: Monad largest, Pleroma next, and
+    /// all Aeons equal and smaller.
+    private func nodeRadius(for node: ExplorerNode, visuals: ExplorerVisuals) -> Float {
+        if let scale = visuals.scale {
+            return scale * 1.2
+        }
+        switch node.emanationType {
+        case "monad":   return 3.0
+        case "pleroma": return 2.2
+        case "aeon":    return 1.4
+        default:        return 1.4
+        }
     }
 
     private func colorFromHex(_ hex: String?) -> UIColor? {
@@ -324,18 +437,22 @@ struct CosmoScene: View {
     // MARK: - Camera Focus System
 
     private func focusOnNode(_ node: ExplorerNode) {
-        guard let visuals = node.explorer else { return }
+        // Use the entity's actual scene position (which may be a layout
+        // fallback) rather than `visuals.worldPosition`, so focusing works even
+        // when Sanity has no explicit position yet.
+        guard let entity = nodeEntities[node.id] else { return }
+        let nodePosition = entity.position
 
         let focusDistance: Float = 18.0
         let cameraHeight: Float = 11.5
         let lookAtLift: Float = 1.8
 
         let targetPosition = SIMD3<Float>(
-            visuals.worldPosition.x,
+            nodePosition.x,
             cameraHeight,
-            visuals.worldPosition.z + focusDistance
+            nodePosition.z + focusDistance
         )
-        let targetLookAt = visuals.worldPosition + SIMD3<Float>(0, lookAtLift, 0)
+        let targetLookAt = nodePosition + SIMD3<Float>(0, lookAtLift, 0)
 
         cameraTargetPosition = targetPosition
         cameraTargetLookAt = targetLookAt
@@ -396,7 +513,7 @@ struct CosmoScene: View {
         isUserPanning = false
         accumulatedYaw = 0
         accumulatedPitch = 0
-        orbitDistance = 30
+        orbitDistance = 38
         lastDragTranslation = .zero
         lastMagnification = 1.0
 
@@ -448,8 +565,11 @@ struct CosmoScene: View {
                   let visuals = node.explorer else { continue }
 
             if let screenPos = worldToScreen(entity.position, camera: camera, viewSize: viewSize) {
-                let scale = visuals.scale ?? 1.0
-                let verticalOffset: CGFloat = -(CGFloat(scale) * label3DOffsetScaleFactor + label3DOffsetBase)
+                // Lift the label proportionally to the node's actual radius so it
+                // clears larger nodes (Monad/Pleroma) even when Sanity `scale`
+                // is absent and the size comes from the type-based fallback.
+                let effectiveScale = visuals.scale ?? nodeRadius(for: node, visuals: visuals)
+                let verticalOffset: CGFloat = -(CGFloat(effectiveScale) * label3DOffsetScaleFactor + label3DOffsetBase)
                 newPositions[id] = CGPoint(x: screenPos.x, y: screenPos.y + verticalOffset)
             }
         }

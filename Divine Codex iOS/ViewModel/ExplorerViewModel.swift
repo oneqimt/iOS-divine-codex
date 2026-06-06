@@ -29,8 +29,9 @@ final class ExplorerViewModel {
     // MARK: - State
 
     /// The explorer nodes that will be rendered in the Cosmology Explorer.
-    /// This combines local stable data (Monad, Pleroma, Aeons) with dynamic
-    /// content coming from Sanity (Barbelo, Sophia, and other Invisibles).
+    /// Every node — the Monad, Pleroma, Aeon, and the Invisibles (Barbelo,
+    /// Sophia, etc.) — now comes from Sanity as an `Emanation`. Populated by
+    /// `updateWithServerData(_:)`.
     private(set) var nodes: [ExplorerNode] = []
 
     /// The node the user has currently selected.
@@ -43,34 +44,29 @@ final class ExplorerViewModel {
     // MARK: - Init
 
     init() {
-        loadLocalHierarchy()
+        // The Monad, Pleroma, and Aeon nodes now live in Sanity (as `Emanation`
+        // records distinguished by their Emanation Type). We no longer seed the
+        // hierarchy from `LocalCosmologySeeds`; `nodes` is populated entirely by
+        // `updateWithServerData(_:)` once the server data arrives.
     }
 
     // MARK: - Data Loading
 
-    /// Loads the local top of the hierarchy (Monad → Pleroma → Aeons).
-    /// Uses the cached static from ExplorerNode so the (tiny) construction of
-    /// the three seed nodes only happens once in the lifetime of the app.
-    private func loadLocalHierarchy() {
-        nodes = ExplorerNode.localNodes
-    }
-
-    /// Merges server data (from Sanity) into the explorer nodes.
-    /// Currently appends `Emanation` entries under the local hierarchy.
-    /// This will evolve as we refine how Barbelo, Sophia, and the Invisibles
-    /// should be placed in the tree (e.g. via `parentId`).
+    /// Replaces the explorer nodes with server data (from Sanity).
+    ///
+    /// Every node — including the Monad, Pleroma, and Aeon — now comes from
+    /// Sanity as an `Emanation`, so there is no longer any local seed data
+    /// prepended here. (This is what previously caused the duplicated nodes in
+    /// `CosmoScene`: the local seeds and their Sanity equivalents were both
+    /// being rendered.)
     ///
     /// Optimized to avoid replacing `nodes` (and thus emitting an @Observable
     /// change notification) if the resulting list would be identical.
     func updateWithServerData(_ emanations: [Emanation]) {
-        // For now we simply convert incoming Emanation entries into .emanation nodes.
+        // Convert incoming Emanation entries into .emanation nodes.
         // Later we can be smarter about placement using `parentId` / `consortId`,
         // filtering, and ordering via explorer.layerOrder.
-        let serverNodes = emanations.map { ExplorerNode.emanation($0) }
-
-        // Replace any previous server nodes with the fresh ones.
-        // Keep the local hierarchy at the top.
-        let newNodes = ExplorerNode.localNodes + serverNodes
+        let newNodes = emanations.map { ExplorerNode.emanation($0) }
 
         if newNodes != nodes {
             nodes = newNodes
