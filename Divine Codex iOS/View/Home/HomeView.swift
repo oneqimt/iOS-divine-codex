@@ -15,15 +15,16 @@ struct HomeView: View {
     @Environment(SanityViewModel.self) private var sanity
     @Environment(ExplorerViewModel.self) private var explorerViewModel
 
+    /// Called once the launch-time Liquid Glass warmup has run on the real tab
+    /// bar. RootView uses this to dismiss the splash. Defaults to a no-op so
+    /// HomeView still works when used standalone (e.g. previews).
+    var onWarmupComplete: () -> Void = {}
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background lives at the root so every tab inherits the same mood.
             Theme.Colors.background
                 .ignoresSafeArea()
-
-            // Warm up the Liquid Glass render pipeline at launch so the user's
-            // first tab switch doesn't pay the one-time initialization cost.
-            GlassWarmupView()
 
             // Content area — swaps based on the selected tab.
             Group {
@@ -53,6 +54,32 @@ struct HomeView: View {
         .onChange(of: sanity.emanations) { _, newEmanations in
             explorerViewModel.updateWithServerData(newEmanations)
         }
+        .task {
+            await warmUpLiquidGlass()
+            onWarmupComplete()
+        }
+    }
+
+    /// Drives one real Liquid Glass tab transition on the actual tab bar so the
+    /// `matchedGeometryEffect` glass-move pipeline compiles while the splash
+    /// covers the screen. Returns the selection to Home when done. Because this
+    /// runs on the *real* TabBarView (not an off-screen copy), the system can't
+    /// optimize it away — which is why earlier off-screen warmups were flaky.
+    private func warmUpLiquidGlass() async {
+        // Let the first frame settle so the tab bar is on-screen.
+        try? await Task.sleep(for: .milliseconds(50))
+
+        // Animate to another tab and back to compile the glass transition.
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            selectedTab = .explorer
+        }
+        try? await Task.sleep(for: .milliseconds(250))
+
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            selectedTab = .home
+        }
+        // Small settle so the return transition completes before we reveal.
+        try? await Task.sleep(for: .milliseconds(250))
     }
 }
 

@@ -24,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DB3D88EF2FD4DA7B0045B757 /* Divine-Codex-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Divine-Codex-Info.plist"; sourceTree = "<group>"; };
 		DBA9F03D2FC8B6E100D93F4A /* Divine Codex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Divine Codex.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBA9F04A2FC8B6E300D93F4A /* Divine Codex iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Divine Codex iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBA9F0542FC8B6E300D93F4A /* Divine Codex iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Divine Codex iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +76,7 @@
 		DBA9F0342FC8B6E100D93F4A = {
 			isa = PBXGroup;
 			children = (
+				DB3D88EF2FD4DA7B0045B757 /* Divine-Codex-Info.plist */,
 				DBA9F03F2FC8B6E100D93F4A /* Divine Codex iOS */,
 				DBA9F04D2FC8B6E300D93F4A /* Divine Codex iOSTests */,
 				DBA9F0572FC8B6E300D93F4A /* Divine Codex iOSUITests */,
@@ -400,6 +402,7 @@
 				DEVELOPMENT_TEAM = 6W7BQ2NFPV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Divine-Codex-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -433,6 +436,7 @@
 				DEVELOPMENT_TEAM = 6W7BQ2NFPV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Divine-Codex-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

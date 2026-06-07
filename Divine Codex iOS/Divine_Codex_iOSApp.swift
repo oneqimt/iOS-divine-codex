@@ -62,14 +62,11 @@ struct Divine_Codex_iOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Root view for the app.
-            // HomeView currently contains the main navigation (TabBar + content).
-            //
-            // Future consideration:
-            // We may introduce a SplashView here if we need to initialize
-            // the Sanity client, load initial data, or perform other async setup
-            // before showing the main interface.
-            HomeView()
+            // RootView gates an animated splash over a live HomeView. The splash
+            // covers the launch-time Liquid Glass warmup (HomeView drives one
+            // real tab transition underneath) and dismisses when warmup signals
+            // completion — so the user's first tab tap is smooth.
+            RootView()
                 .environment(sanity)
                 .environment(explorerViewModel)
                 .task {
@@ -81,6 +78,33 @@ struct Divine_Codex_iOSApp: App {
                     // even if the user visits the Explorer tab after launch.
                     await sanity.fetchEmanations()
                 }
+        }
+    }
+}
+
+// MARK: - Root coordinator (Splash → HomeView)
+
+/// Shows `SplashView` over a live `HomeView` at launch. `HomeView` warms the
+/// Liquid Glass transition pipeline underneath the splash and calls back when
+/// done; the splash then fades away to reveal the warm UI.
+private struct RootView: View {
+    @State private var isWarm = false
+
+    var body: some View {
+        ZStack {
+            // HomeView is alive from launch (hidden beneath the splash) so its
+            // real TabBarView glass can warm up. Once warm, it fades in.
+            HomeView(onWarmupComplete: {
+                withAnimation(.easeInOut(duration: 0.45)) {
+                    isWarm = true
+                }
+            })
+            .opacity(isWarm ? 1 : 0)
+
+            if !isWarm {
+                SplashView()
+                    .transition(.opacity)
+            }
         }
     }
 }
