@@ -38,7 +38,7 @@ struct Emanation: Identifiable, Sendable, Equatable, Hashable {
     let type: String?
     /// Reference id of the parent node (hierarchy backbone). `nil` for the root.
     let parentId: String?
-    /// Reference id of the consort/syzygy partner. Surfaced as "Syzygy" in app.
+    /// Reference id of the consort partner (paired Aeons).
     let consortId: String?
     /// Visualization data for the RealityKit scene.
     let explorer: Explorer?
@@ -160,6 +160,9 @@ extension Emanation {
         id: String = "sample-sophia",
         name: String = "Sophia",
         type: String = "Aeon",
+        parentId: String? = "sample-pleroma",
+        order: Int = 1,
+        consortId: String? = nil,
         shortDescription: String? = "Divine Wisdom. The lowest of the 24 Invisibles who, in her longing, descended and brought the Divine Spark into the lower realms."
     ) -> Emanation {
         Emanation(
@@ -167,10 +170,10 @@ extension Emanation {
             name: name,
             slug: name.lowercased(),
             gender: .feminine,
-            order: 1,
+            order: order,
             type: type,
-            parentId: "sample-pleroma",
-            consortId: nil,
+            parentId: parentId,
+            consortId: consortId,
             explorer: Explorer(
                 layerOrder: 30,
                 position: Position(x: -4, y: 0.5, z: -1.5),
@@ -186,18 +189,47 @@ extension Emanation {
         )
     }
 
-    /// A small set of sample nodes (Monad, Pleroma, and a few Aeons) for
-    /// previewing carousels and multi-node layouts.
+    /// A small hierarchy (Monad → Pleroma → Aeons) for previews and the Cosmo Stage.
     static let sampleSet: [Emanation] = [
-        .sample(id: "sample-monad", name: "Monad", type: "Monad",
-                shortDescription: "The Ineffable Source. The One beyond all names and forms."),
-        .sample(id: "sample-pleroma", name: "Pleroma", type: "Pleroma",
-                shortDescription: "The Fullness. The divine realm of perfect unity and emanation."),
-        .sample(id: "sample-barbelo", name: "Barbelo", type: "Aeon",
-                shortDescription: "The first emanation of the Monad. The Womb of the All."),
-        .sample(id: "sample-sophia", name: "Sophia", type: "Aeon"),
-        .sample(id: "sample-christos", name: "Christos", type: "Aeon",
-                shortDescription: "The Anointed. The revealer who descends to awaken the forgotten Spark.")
+        .sample(
+            id: "sample-monad",
+            name: "Monad",
+            type: "Monad",
+            parentId: nil,
+            order: 0,
+            shortDescription: "The Ineffable Source. The One beyond all names and forms."
+        ),
+        .sample(
+            id: "sample-pleroma",
+            name: "Pleroma",
+            type: "Pleroma",
+            parentId: "sample-monad",
+            order: 0,
+            shortDescription: "The Fullness. The divine realm of perfect unity and emanation."
+        ),
+        .sample(
+            id: "sample-barbelo",
+            name: "Barbelo",
+            type: "Aeon",
+            parentId: "sample-pleroma",
+            order: 1,
+            shortDescription: "The first emanation of the Monad. The Womb of the All."
+        ),
+        .sample(
+            id: "sample-sophia",
+            name: "Sophia",
+            type: "Aeon",
+            parentId: "sample-pleroma",
+            order: 2
+        ),
+        .sample(
+            id: "sample-christos",
+            name: "Christos",
+            type: "Aeon",
+            parentId: "sample-pleroma",
+            order: 3,
+            shortDescription: "The Anointed. The revealer who descends to awaken the forgotten Spark."
+        )
     ]
 }
 #endif

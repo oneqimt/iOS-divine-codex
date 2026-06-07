@@ -2,13 +2,7 @@
 //  CosmoExplorerView.swift
 //  Divine Codex iOS
 //
-//  The new, simplified Cosmology Explorer: a platter carousel of nodes paired
-//  with a data-bound detail sidebar. Replaces the free-floating 3D "planets"
-//  scene (CosmoScene) with a cleaner, more usable layout.
-//
-//  Layout adapts to size class:
-//   - Regular width (iPad): platter + sidebar side-by-side (split view feel)
-//   - Compact width (iPhone): platter full-screen; sidebar as a sheet
+//  Cosmology Explorer container: spatial Cosmo Stage with full-screen detail push.
 //
 
 import SwiftUI
@@ -16,99 +10,50 @@ import SwiftUI
 struct CosmoExplorerView: View {
 
     let explorerViewModel: ExplorerViewModel
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dismiss) private var dismiss
 
-    private var nodes: [ExplorerNode] { explorerViewModel.nodes }
-
     var body: some View {
-        Group {
-            if horizontalSizeClass == .regular {
-                regularLayout
-            } else {
-                compactLayout
+        NavigationStack {
+            ZStack {
+                Theme.Colors.background.ignoresSafeArea()
+
+                CosmoStage(
+                    viewModel: explorerViewModel,
+                    onSelectNode: { node in
+                        explorerViewModel.selectNode(node)
+                    }
+                )
+            }
+            .overlay(alignment: .topTrailing) {
+                closeButton.padding(16)
+            }
+            .navigationDestination(item: detailBinding) { node in
+                if let pair = explorerViewModel.pair(containing: node) {
+                    CosmoDetailView(pair: pair) {
+                        explorerViewModel.clearSelection()
+                    }
+                } else {
+                    CosmoDetailView(pair: CosmoConsortPair(primary: node, consort: nil)) {
+                        explorerViewModel.clearSelection()
+                    }
+                }
             }
         }
         .onAppear { explorerViewModel.didEnterImmersiveScene() }
         .onDisappear { explorerViewModel.didExitImmersiveScene() }
     }
 
-    // MARK: - Regular (iPad): side-by-side
-
-    private var regularLayout: some View {
-        HStack(spacing: 0) {
-            platter
-                .frame(maxWidth: .infinity)
-                // Cover-dismiss lives over the platter only, so it never
-                // collides with the sidebar's own close button.
-                .overlay(alignment: .topTrailing) { closeButton.padding(16) }
-
-            if explorerViewModel.selectedNode != nil {
-                Divider()
-                CosmoSidebar(
-                    node: explorerViewModel.selectedNode,
-                    onClose: { explorerViewModel.clearSelection() }
-                )
-                .frame(width: 380)
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+    private var detailBinding: Binding<ExplorerNode?> {
+        Binding(
+            get: { explorerViewModel.selectedNode },
+            set: { newValue in
+                if newValue == nil {
+                    explorerViewModel.clearSelection()
+                } else {
+                    explorerViewModel.selectNode(newValue!)
+                }
             }
-        }
-        .animation(.spring(response: 0.45, dampingFraction: 0.85),
-                   value: explorerViewModel.selectedNode)
-    }
-
-    // MARK: - Compact (iPhone): platter + sheet
-
-    private var compactLayout: some View {
-        platter
-            .overlay(alignment: .topTrailing) { closeButton.padding(16) }
-            .sheet(
-                isPresented: Binding(
-                    get: { explorerViewModel.selectedNode != nil },
-                    set: { if !$0 { explorerViewModel.clearSelection() } }
-                )
-            ) {
-                CosmoSidebar(
-                    node: explorerViewModel.selectedNode,
-                    onClose: { explorerViewModel.clearSelection() }
-                )
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-            }
-    }
-
-    // MARK: - Shared pieces
-
-    private var platter: some View {
-        ZStack {
-            Theme.Colors.background.ignoresSafeArea()
-
-            // Tap-away-to-dismiss: a background catcher behind the carousel.
-            // It only intercepts taps when a node is selected, and sits *below*
-            // CosmoPlatter so card taps (selection) still take precedence.
-            if explorerViewModel.selectedNode != nil {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        explorerViewModel.clearSelection()
-                    }
-                    .ignoresSafeArea()
-            }
-
-            CosmoPlatter(
-                nodes: nodes,
-                selection: Binding(
-                    get: { explorerViewModel.selectedNode },
-                    set: { newValue in
-                        if let newValue {
-                            explorerViewModel.selectNode(newValue)
-                        } else {
-                            explorerViewModel.clearSelection()
-                        }
-                    }
-                )
-            )
-        }
+        )
     }
 
     private var closeButton: some View {
