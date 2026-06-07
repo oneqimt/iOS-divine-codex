@@ -1,14 +1,38 @@
 # Divine Codex iOS — IN PROGRESS
 
 > **Status**: Early Development  
-> **Last Updated**: June 6, 2026 (Retired 3D "planets" → platter carousel + data-bound sidebar; Sanity-only data; PortableText + media rendering; first-tab Liquid Glass lag → splash-screen plan)  
-> **Current Focus**: Build a Splash screen to absorb the first-tab Liquid Glass warmup hitch
+> **Last Updated**: June 7, 2026 (✅ Splash screen DONE — first-tab Liquid Glass lag fixed; carousel + sidebar Explorer shipping)  
+> **Current Focus**: Pass 2 cleanup (collapse ExplorerNode) + whatever's next
 
 ---
 
-## ⏭️ NEXT SESSION — START HERE (June 6, 2026)
+## ⏭️ NEXT SESSION — START HERE (June 7, 2026)
 
-**We stopped to take a break. Resume with the Splash screen plan below.**
+**✅ The first-tab Liquid Glass lag is SOLVED. The Splash screen works.**
+
+### Splash screen — DONE
+- **`SplashView.swift`** — violet radial-gradient halo + transparent icon (`"app-icon-no-back"`, an icon asset with NO baked-in background) + gold `ProgressView` spinner. The transparent icon blends perfectly into the halo (no edge mismatch). `iconViolet` constant is tunable.
+- **`RootView`** (in `Divine_Codex_iOSApp.swift`) — gates `SplashView` over a live `HomeView`. Splash dismisses when warmup signals complete (fade ~0.45s), not on a fixed timer.
+- **`HomeView.warmUpLiquidGlass()`** — drives ONE real tab transition (`.home → .explorer → .home`) on the actual `TabBarView` while the splash covers it, then calls `onWarmupComplete()`. Because it runs on the REAL tab bar (not an off-screen copy), the system can't optimize it away → the glass `matchedGeometryEffect` pipeline genuinely compiles. **Result: first Explorer tab tap is now instant.** ✅
+- **`GlassWarmupView-Home.swift`** — emptied + marked "DELETE THIS FILE". The old off-screen warmup approach is dead. **TODO: delete this file in Xcode.**
+- `TabBarView` selected indicator uses **non-interactive** tinted glass (kept from the perf hunt — looks right, cheaper).
+
+### Still owed / next up
+1. **Delete `GlassWarmupView-Home.swift`** in Xcode (emptied, unused).
+2. **Delete `REFERENCE_SacredSites_Splash.swift`** whenever (reference only, served its purpose).
+3. **Pass 2 cleanup** (not yet done): collapse `ExplorerNode` to just the `.emanation` case and delete the local `Monad`/`Pleroma`/`Aeon` types (still referenced by the enum's `.monad/.pleroma/.aeon` cases). Touches several `switch` statements but mechanical.
+4. **Old `CosmoScene.swift`** (RealityKit "planets") — still in project, unused. Candidate for deletion.
+5. `SanityViewModel.fetchEmanations` still has an elapsed-time `logger.info`/`print` (handy; remove anytime).
+
+### Where things are (quick map)
+- Launch flow: `Divine_Codex_iOSApp` → `RootView` (Splash gate) → `HomeView` (warms glass) → tabs.
+- Explorer: `ExplorerView` → `.fullScreenCover` → `CosmoExplorerView` → `CosmoPlatter` (carousel) + `CosmoSidebar` (detail).
+- Data: App creates `SanityViewModel` + `ExplorerViewModel` (Environment); `HomeView` feeds `sanity.emanations` → `explorerViewModel.updateWithServerData`.
+- Portable Text + media: `PortableTextView.swift` (`RemoteSanityImage` + `SanityImageURL` for Sanity CDN images via `AsyncImage`).
+
+---
+
+## Previous Session (June 6, 2026) — Explorer redesign + perf hunt
 
 ### What we accomplished this session
 1. **Retired the 3D "planets" Cosmology Explorer** in favor of a much more usable design:
