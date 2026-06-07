@@ -32,6 +32,9 @@ final class SanityViewModel {
     /// reassembled elsewhere from `parentId` / `consortId`.
     var emanations: [Emanation] = []
 
+    /// Sacred Frequencies — chants and utterances for the practice player.
+    var frequencies: [Frequency] = []
+
     /// `true` while a network request is in flight.
     var isLoading: Bool = false
 
@@ -86,6 +89,41 @@ final class SanityViewModel {
             errorMessage = message
             logger.error("fetchEmanations failed: \(message, privacy: .public)")
             print("❌ fetchEmanations failed: \(message)")
+        }
+    }
+
+    /// Fetches every `frequency` document for the Sacred Frequencies player.
+    func fetchFrequencies() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        let query = """
+        *[_type == "frequency"] | order(order asc){
+          _id,
+          "title": coalesce(title, name),
+          "slug": slug.current,
+          shortDescription,
+          practiceNotes,
+          pronunciationGuide,
+          order,
+          "audioUrl": coalesce(audio.url, audioUrl),
+          "audioLoopable": coalesce(audio.loopable, true),
+          coverImage,
+          "associatedEmanationIds": associatedEmanations[]._ref
+        }
+        """
+
+        do {
+            let results = try await client.fetch(query: query, as: [Frequency].self)
+            frequencies = results
+            logger.info("Fetched \(results.count, privacy: .public) frequencies.")
+            print("✅ Fetched \(results.count) frequencies")
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            errorMessage = message
+            logger.error("fetchFrequencies failed: \(message, privacy: .public)")
+            print("❌ fetchFrequencies failed: \(message)")
         }
     }
 }

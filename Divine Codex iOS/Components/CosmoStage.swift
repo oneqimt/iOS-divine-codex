@@ -226,12 +226,12 @@ struct CosmoStage: View {
                 }
             case .pleroma:
                 if !viewModel.displayUnits.isEmpty {
-                    hintLabel("Tap to meet the Aeons · Tap halo to return")
+                    hintLabel("Tap to meet the Aeons · Swipe left to return · Hold for details")
                 } else {
-                    hintLabel("Tap the halo to return")
+                    hintLabel("Swipe left to return")
                 }
             case .aeons:
-                hintLabel("Tap an emanation · Swipe from edge or tap center to return")
+                hintLabel("Tap an emanation · Swipe left or tap center to return")
             }
         }
     }

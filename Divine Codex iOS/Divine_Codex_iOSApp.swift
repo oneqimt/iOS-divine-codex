@@ -30,6 +30,9 @@ struct Divine_Codex_iOSApp: App {
     /// Injected via Environment; server data is merged from HomeView regardless of active tab.
     @State private var explorerViewModel: ExplorerViewModel
 
+    /// Playback + favorites for Sacred Frequencies (CloudKit sync planned).
+    @State private var sacredFrequenciesVM: SacredFrequenciesViewModel
+
     init() {
         // 1. Make sure the API token is loaded into TokenManager before we
         //    build the client. `setupToken()` lives in `secret.swift`.
@@ -58,6 +61,7 @@ struct Divine_Codex_iOSApp: App {
         //    creation timing is identical and deterministic.
         _sanity = State(initialValue: SanityViewModel(client: client))
         _explorerViewModel = State(initialValue: ExplorerViewModel())
+        _sacredFrequenciesVM = State(initialValue: SacredFrequenciesViewModel())
     }
 
     var body: some Scene {
@@ -69,14 +73,11 @@ struct Divine_Codex_iOSApp: App {
             RootView()
                 .environment(sanity)
                 .environment(explorerViewModel)
+                .environment(sacredFrequenciesVM)
                 .task {
-                    // Prefetch emanation data at app launch.
-                    // Data is merged into the (shared) ExplorerViewModel by
-                    // HomeView (which is always in the hierarchy and observes
-                    // changes on sanity.emanations). This keeps ExplorerView
-                    // initialization fast and ensures server nodes are available
-                    // even if the user visits the Explorer tab after launch.
+                    // Prefetch Sanity content at launch.
                     await sanity.fetchEmanations()
+                    await sanity.fetchFrequencies()
                 }
         }
     }

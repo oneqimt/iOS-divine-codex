@@ -188,6 +188,12 @@ struct PreviewSanityClient: SanityClientProtocol {
         if type == [DivineCodex].self {
             return [] as! T
         }
+        if type == [Emanation].self {
+            return [] as! T
+        }
+        if type == [Frequency].self {
+            return Frequency.sampleSet as! T
+        }
         throw NSError(
             domain: "preview",
             code: 0,

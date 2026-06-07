@@ -98,6 +98,10 @@ struct HomeView: View {
 /// - The tagline respects the safe area; the parent reserves room beneath
 ///   it for the floating tab bar.
 private struct HomeContentView: View {
+    @Environment(SacredFrequenciesViewModel.self) private var frequenciesVM
+    @Environment(SanityViewModel.self) private var sanity
+    @State private var showFrequenciesLibrary = false
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Subtle scrim so the tagline stays legible over bright areas.
@@ -113,13 +117,40 @@ private struct HomeContentView: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
-            // Tagline anchored above the floating tab bar.
-            Text("Ancient wisdom reawakened")
-                .sacredSubtitle()
-                .multilineTextAlignment(.center)
+            VStack(spacing: Theme.Spacing.md) {
+                Button {
+                    showFrequenciesLibrary = true
+                } label: {
+                    Label {
+                        VStack(spacing: 2) {
+                            Text("Sacred Frequencies")
+                            if !frequenciesVM.favoriteIds.isEmpty {
+                                Text("\(frequenciesVM.favoriteIds.count) saved")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.Colors.secondaryText)
+                            } else if !sanity.frequencies.isEmpty {
+                                Text("\(sanity.frequencies.count) to explore")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.Colors.secondaryText)
+                            }
+                        }
+                    } icon: {
+                        Image(systemName: "waveform.circle.fill")
+                    }
+                }
+                .buttonStyle(PleromaButtonStyle())
                 .padding(.horizontal, Theme.Spacing.lg)
-                .padding(.bottom, 130) // Clears the floating tab bar (~88pt) + breathing room
-                .frame(maxWidth: .infinity)
+
+                Text("Ancient wisdom reawakened")
+                    .sacredSubtitle()
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.bottom, 130)
+            .frame(maxWidth: .infinity)
+        }
+        .fullScreenCover(isPresented: $showFrequenciesLibrary) {
+            FrequenciesLibraryView()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // The image lives in the background so it centers against the **true
@@ -140,12 +171,14 @@ private struct HomeContentView: View {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
+        .environment(SacredFrequenciesViewModel())
 }
 
 #Preview("iPhone Landscape", traits: .landscapeLeft) {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
+        .environment(SacredFrequenciesViewModel())
 }
 
 // Note: To preview on a specific device (e.g. iPad), use the device picker
@@ -155,4 +188,5 @@ private struct HomeContentView: View {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
+        .environment(SacredFrequenciesViewModel())
 }
