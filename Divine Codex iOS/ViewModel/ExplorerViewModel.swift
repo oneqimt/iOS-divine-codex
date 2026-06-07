@@ -156,6 +156,43 @@ final class ExplorerViewModel {
         return aeonNodes.map { CosmoConsortPair(primary: $0, consort: nil) }
     }
 
+    private var monadName: String { monad?.name ?? "Monad" }
+    private var pleromaName: String { pleroma?.name ?? "Pleroma" }
+
+    /// Full hierarchy breadcrumb for the current stage depth.
+    var stageBreadcrumb: String {
+        switch stageDepth {
+        case .monad:
+            return monadName
+        case .pleroma:
+            return "\(monadName) › \(pleromaName)"
+        case .aeons:
+            return "\(monadName) › \(pleromaName) › Aeons"
+        }
+    }
+
+    /// Breadcrumb shown on detail — extends the stage path with the selection.
+    func detailBreadcrumb(for pair: CosmoConsortPair) -> String {
+        let selection = pair.displayName
+        switch stageDepth {
+        case .monad:
+            return "\(monadName) › \(selection)"
+        case .pleroma:
+            return "\(monadName) › \(pleromaName) › \(selection)"
+        case .aeons:
+            return "\(monadName) › \(pleromaName) › Aeons › \(selection)"
+        }
+    }
+
+    /// The parent node whose ghost orb drills up one level (nil at Monad).
+    var parentGhostNode: ExplorerNode? {
+        switch stageDepth {
+        case .monad: nil
+        case .pleroma: monad
+        case .aeons: pleroma
+        }
+    }
+
     private func withStageAnimation(_ changes: () -> Void) {
         changes()
     }

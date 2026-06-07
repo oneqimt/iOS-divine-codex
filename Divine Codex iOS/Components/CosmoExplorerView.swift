@@ -28,14 +28,13 @@ struct CosmoExplorerView: View {
                 closeButton.padding(16)
             }
             .navigationDestination(item: detailBinding) { node in
-                if let pair = explorerViewModel.pair(containing: node) {
-                    CosmoDetailView(pair: pair) {
-                        explorerViewModel.clearSelection()
-                    }
-                } else {
-                    CosmoDetailView(pair: CosmoConsortPair(primary: node, consort: nil)) {
-                        explorerViewModel.clearSelection()
-                    }
+                let pair = explorerViewModel.pair(containing: node)
+                    ?? CosmoConsortPair(primary: node, consort: nil)
+                CosmoDetailView(
+                    pair: pair,
+                    returnLabel: explorerViewModel.detailBreadcrumb(for: pair)
+                ) {
+                    explorerViewModel.clearSelection()
                 }
             }
         }

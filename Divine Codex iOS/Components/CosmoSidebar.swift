@@ -19,6 +19,7 @@ struct CosmoSidebar: View {
             if let node {
                 CosmoDetailView(
                     pair: CosmoConsortPair(primary: node, consort: nil),
+                    returnLabel: "Monad",
                     onBack: onClose
                 )
             } else {

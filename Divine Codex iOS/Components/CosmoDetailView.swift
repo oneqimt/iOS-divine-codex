@@ -5,6 +5,8 @@
 //  Full-screen detail for a selected emanation (or consort pair). Migrated from
 //  the split-view sidebar so rich content uses the entire viewport.
 //
+//  Wayfinding: swipe from the leading edge to return; faint breadcrumb is optional tap target.
+//
 
 import SwiftUI
 import AVKit
@@ -12,10 +14,11 @@ import AVKit
 struct CosmoDetailView: View {
 
     let pair: CosmoConsortPair
+    let returnLabel: String
     var onBack: () -> Void
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Theme.Colors.background.ignoresSafeArea()
 
             ScrollView {
@@ -26,19 +29,17 @@ struct CosmoDetailView: View {
                     Spacer(minLength: 32)
                 }
                 .padding(24)
+                .padding(.top, 36)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+
+            CosmoWayfindingLabel(title: returnLabel, action: onBack)
+                .padding(.top, 8)
+                .padding(.leading, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Label("Back", systemImage: "chevron.left")
-                        .font(.system(size: 16, weight: .semibold))
-                }
-                .accessibilityLabel("Back to cosmology")
-            }
-        }
     }
 
     // MARK: - Member content
@@ -137,6 +138,7 @@ struct CosmoDetailView: View {
     NavigationStack {
         CosmoDetailView(
             pair: CosmoConsortPair(primary: .emanation(.sample()), consort: nil),
+            returnLabel: "Aeons",
             onBack: {}
         )
     }

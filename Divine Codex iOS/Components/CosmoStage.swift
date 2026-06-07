@@ -5,6 +5,8 @@
 //  Spatial, hierarchy-aware cosmology navigator. Replaces the flat carousel
 //  with a drill-down hero stage: Monad → Pleroma → Aeon consort ring.
 //
+//  Wayfinding: tap the parent ghost orb or swipe from the leading edge to drill up.
+//
 
 import SwiftUI
 
@@ -30,17 +32,31 @@ struct CosmoStage: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
         }
-        .overlay(alignment: .topLeading) {
-            if viewModel.stageDepth != .monad {
-                backButton
-                    .padding(16)
-            }
+        .overlay(alignment: .top) {
+            CosmoWayfindingLabel(title: viewModel.stageBreadcrumb)
+                .padding(.top, 8)
         }
         .overlay(alignment: .bottom) {
             stageHint
                 .padding(.bottom, 28)
         }
+        .simultaneousGesture(stageDrillUpGesture)
         .animation(.spring(response: 0.55, dampingFraction: 0.82), value: viewModel.stageDepth)
+    }
+
+    // MARK: - Drill-up gesture
+
+    private var stageDrillUpGesture: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onEnded { value in
+                guard viewModel.stageDepth != .monad else { return }
+                // Leading-edge back swipe (LTR): finger moves right.
+                let isBackSwipe = value.translation.width > 70
+                let isMostlyHorizontal = abs(value.translation.width) > abs(value.translation.height)
+                if isBackSwipe && isMostlyHorizontal {
+                    viewModel.drillUp()
+                }
+            }
     }
 
     // MARK: - Monad
@@ -66,10 +82,11 @@ struct CosmoStage: View {
     private func pleromaHero(in size: CGSize) -> some View {
         ZStack {
             if let monad = viewModel.monad {
-                CosmoNodeOrb(node: monad, diameter: Self.heroDiameter(.monad, in: size) * 0.55, showsLabel: false)
-                    .opacity(0.22)
-                    .blur(radius: 1)
-                    .allowsHitTesting(false)
+                parentGhost(
+                    node: monad,
+                    diameter: Self.heroDiameter(.monad, in: size) * 0.55,
+                    accessibilityLabel: "Return to \(monad.name)"
+                )
             }
 
             if let pleroma = viewModel.pleroma {
@@ -97,10 +114,12 @@ struct CosmoStage: View {
 
         ZStack {
             if let pleroma = viewModel.pleroma {
-                CosmoNodeOrb(node: pleroma, diameter: tokenSize * 1.35, showsLabel: false)
-                    .opacity(0.35)
-                    .position(center)
-                    .allowsHitTesting(false)
+                parentGhost(
+                    node: pleroma,
+                    diameter: tokenSize * 1.35,
+                    accessibilityLabel: "Return to \(pleroma.name)"
+                )
+                .position(center)
             }
 
             if units.isEmpty {
@@ -113,35 +132,59 @@ struct CosmoStage: View {
 
                     pairToken(pair, diameter: tokenSize)
                         .position(x: x, y: y)
+                        .zIndex(1)
                 }
             }
         }
     }
 
-    private func pairToken(_ pair: CosmoConsortPair, diameter: CGFloat) -> some View {
+    // MARK: - Parent ghost (tap to drill up)
+
+    private func parentGhost(
+        node: ExplorerNode,
+        diameter: CGFloat,
+        accessibilityLabel: String
+    ) -> some View {
         Button {
+            viewModel.drillUp()
+        } label: {
+            CosmoNodeOrb(node: node, diameter: diameter, showsLabel: false)
+                .opacity(0.38)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private func pairToken(_ pair: CosmoConsortPair, diameter: CGFloat) -> some View {
+        let hitSide = max(diameter * 3.6, 96)
+
+        return Button {
             viewModel.selectPair(pair)
             onSelectNode(pair.primary)
         } label: {
-            if let consort = pair.consort {
-                HStack(spacing: 6) {
-                    CosmoNodeOrb(node: pair.primary, diameter: diameter, showsLabel: false)
-                    CosmoNodeOrb(node: consort, diameter: diameter, showsLabel: false)
+            Group {
+                if let consort = pair.consort {
+                    HStack(spacing: 6) {
+                        CosmoNodeOrb(node: pair.primary, diameter: diameter, showsLabel: false)
+                        CosmoNodeOrb(node: consort, diameter: diameter, showsLabel: false)
+                    }
+                    .overlay(alignment: .bottom) {
+                        Text(pair.displayName)
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .frame(width: diameter * 2.8)
+                            .offset(y: diameter * 0.85)
+                    }
+                } else {
+                    CosmoNodeOrb(node: pair.primary, diameter: diameter, isEmphasized: false)
                 }
-                .overlay(alignment: .bottom) {
-                    Text(pair.displayName)
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .frame(width: diameter * 2.8)
-                        .offset(y: diameter * 0.75)
-                }
-            } else {
-                CosmoNodeOrb(node: pair.primary, diameter: diameter, isEmphasized: false)
             }
         }
         .buttonStyle(.plain)
+        .frame(width: hitSide, height: hitSide)
+        .contentShape(Rectangle())
     }
 
     // MARK: - Shared hero
@@ -183,10 +226,12 @@ struct CosmoStage: View {
                 }
             case .pleroma:
                 if !viewModel.displayUnits.isEmpty {
-                    hintLabel("Tap to meet the Aeons · Hold for details")
+                    hintLabel("Tap to meet the Aeons · Tap halo to return")
+                } else {
+                    hintLabel("Tap the halo to return")
                 }
             case .aeons:
-                hintLabel("Tap an emanation to explore")
+                hintLabel("Tap an emanation · Swipe from edge or tap center to return")
             }
         }
     }
@@ -198,21 +243,6 @@ struct CosmoStage: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(.ultraThinMaterial, in: Capsule())
-    }
-
-    private var backButton: some View {
-        Button {
-            viewModel.drillUp()
-        } label: {
-            Label("Back", systemImage: "chevron.left")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial, in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Go back")
     }
 
     private func missingNodeMessage(_ name: String) -> some View {
