@@ -7,6 +7,7 @@
 ---
 
 ## ⏭️ NEXT SESSION — START HERE (June 7, 2026)
+### See FREQUENCIES,md
 
 **✅ First-tab Liquid Glass lag SOLVED (splash). ✅ ExplorerNode collapsed. Build clean & running.**
 

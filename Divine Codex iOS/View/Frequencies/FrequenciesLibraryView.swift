@@ -61,7 +61,7 @@ struct FrequenciesLibraryView: View {
                     }
                 }
             }
-            .sheet(item: $selectedFrequency) { frequency in
+            .fullScreenCover(item: $selectedFrequency) { frequency in
                 FrequencyPlayerView(frequency: frequency, frequenciesVM: frequenciesVM)
             }
         }

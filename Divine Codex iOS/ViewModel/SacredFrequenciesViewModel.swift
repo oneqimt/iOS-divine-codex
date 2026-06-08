@@ -65,6 +65,12 @@ final class SacredFrequenciesViewModel {
 
     // MARK: - Playback
 
+    /// Seeds the loop toggle from Sanity when a frequency's player opens.
+    /// User toggles after this are not overwritten by `play()`.
+    func applyLoopDefault(from frequency: Frequency) {
+        loopPlayback = frequency.audioLoopable ?? true
+    }
+
     func play(_ frequency: Frequency) {
         guard let urlString = frequency.audioURL,
               let url = URL(string: urlString) else {
@@ -94,8 +100,7 @@ final class SacredFrequenciesViewModel {
             player.pause()
             isPlaying = false
         } else {
-            player.play()
-            isPlaying = true
+            resumePlayback(from: player)
         }
     }
 
@@ -130,8 +135,36 @@ final class SacredFrequenciesViewModel {
                     self.player?.play()
                 } else {
                     self.isPlaying = false
+                    // Rewind so the next play tap starts from the beginning.
+                    self.player?.seek(to: .zero)
                 }
             }
+        }
+    }
+
+    private func resumePlayback(from player: AVPlayer) {
+        guard let item = player.currentItem else {
+            player.play()
+            isPlaying = true
+            return
+        }
+
+        let duration = item.duration
+        let current = item.currentTime()
+        let atEnd = duration.isNumeric && current.isNumeric
+            && current.seconds >= max(0, duration.seconds - 0.1)
+
+        if atEnd {
+            player.seek(to: .zero) { [weak self] finished in
+                guard let self, finished else { return }
+                Task { @MainActor in
+                    player.play()
+                    self.isPlaying = true
+                }
+            }
+        } else {
+            player.play()
+            isPlaying = true
         }
     }
 

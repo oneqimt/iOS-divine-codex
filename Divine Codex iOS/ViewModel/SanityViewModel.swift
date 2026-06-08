@@ -99,13 +99,13 @@ final class SanityViewModel {
         defer { isLoading = false }
 
         let query = """
-        *[_type == "frequency"] | order(order asc){
+        *[_type == "frequency"] | order(coalesce(order, 9999) asc){
           _id,
           "title": coalesce(title, name),
           "slug": slug.current,
-          shortDescription,
-          practiceNotes,
-          pronunciationGuide,
+          "shortDescription": coalesce(shortDescription, phoneticSequence),
+          "practiceNotes": coalesce(practiceNotes, notes),
+          "pronunciationGuide": coalesce(pronunciationGuide, phoneticSequence),
           order,
           "audioUrl": coalesce(audio.url, audioUrl),
           "audioLoopable": coalesce(audio.loopable, true),

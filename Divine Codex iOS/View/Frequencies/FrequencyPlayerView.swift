@@ -14,6 +14,11 @@ struct FrequencyPlayerView: View {
     let frequenciesVM: SacredFrequenciesViewModel
     @Environment(\.dismiss) private var dismiss
 
+    /// Container size observed via `onGeometryChange`. Defaults to `.zero`
+    /// for the first layout pass; the cover art collapses safely until a
+    /// real size arrives.
+    @State private var containerSize: CGSize = .zero
+
     private var hasAudio: Bool {
         frequency.audioURL.flatMap(URL.init(string:)) != nil
     }
@@ -23,8 +28,8 @@ struct FrequencyPlayerView: View {
             Theme.Colors.background.ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: Theme.Spacing.lg) {
-                    coverArt
+                VStack(spacing: Theme.Spacing.md) {
+                    coverArt(side: heroArtDimension(in: containerSize))
                     titleBlock
                     transportControls
 
@@ -42,11 +47,18 @@ struct FrequencyPlayerView: View {
                         guidanceSection(title: "About", body: short)
                     }
 
-                    Spacer(minLength: 32)
+                    Spacer(minLength: 24)
                 }
-                .padding(24)
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, horizontalPadding(for: containerSize))
+                .padding(.top, 56)
+                .padding(.bottom, 32)
             }
+        }
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { newSize in
+            containerSize = newSize
         }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 12) {
@@ -55,6 +67,9 @@ struct FrequencyPlayerView: View {
             }
             .padding(16)
         }
+        .onAppear {
+            frequenciesVM.applyLoopDefault(from: frequency)
+        }
         .onDisappear {
             if frequenciesVM.nowPlaying?.id == frequency.id, !frequenciesVM.isPlaying {
                 frequenciesVM.stop()
@@ -62,10 +77,31 @@ struct FrequencyPlayerView: View {
         }
     }
 
+    // MARK: - Layout
+
+    /// Square cover size — dominates the first screen on phone and iPad.
+    /// Clamped to a finite, non-negative value so early layout passes
+    /// (where the container size hasn't been reported yet) don't push a
+    /// bad dimension into `.frame(...)`.
+    private func heroArtDimension(in size: CGSize) -> CGFloat {
+        guard size.width.isFinite, size.height.isFinite,
+              size.width > 0, size.height > 0 else {
+            return 0
+        }
+        let padding = horizontalPadding(for: size) * 2
+        let widthLimit = max(0, size.width - padding)
+        let heightBudget = size.height * (size.height > 700 ? 0.62 : 0.54)
+        return max(0, min(widthLimit, heightBudget))
+    }
+
+    private func horizontalPadding(for size: CGSize) -> CGFloat {
+        size.width > 500 ? 32 : 20
+    }
+
     // MARK: - Cover
 
     @ViewBuilder
-    private var coverArt: some View {
+    private func coverArt(side: CGFloat) -> some View {
         Group {
             if let asset = frequency.coverImage?.asset._ref {
                 RemoteSanityImage(assetRef: asset)
@@ -79,30 +115,32 @@ struct FrequencyPlayerView: View {
                             Theme.Colors.background
                         ],
                         center: .center,
-                        startRadius: 20,
-                        endRadius: 200
+                        startRadius: max(side * 0.05, 0.1),
+                        endRadius: max(side * 0.55, 0.2)
                     )
                     Image(systemName: "waveform.circle")
-                        .font(.system(size: 72, weight: .light))
+                        .font(.system(size: max(side * 0.2, 1), weight: .light))
                         .foregroundStyle(Theme.Colors.divineGold.opacity(0.8))
                 }
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 280)
+        .frame(width: max(side, 1), height: max(side, 1))
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.large))
         .overlay {
             RoundedRectangle(cornerRadius: Theme.Radius.large)
                 .stroke(Theme.Colors.primaryText.opacity(0.1), lineWidth: 1)
         }
+        .opacity(side > 0 ? 1 : 0)
     }
 
     private var titleBlock: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Text(frequency.displayTitle)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.Colors.primaryText)
                 .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .minimumScaleFactor(0.85)
 
             if frequenciesVM.nowPlaying?.id == frequency.id, frequenciesVM.isPlaying {
                 Text("Playing")
@@ -118,12 +156,12 @@ struct FrequencyPlayerView: View {
     // MARK: - Transport
 
     private var transportControls: some View {
-        HStack(spacing: 32) {
+        HStack(spacing: 36) {
             Button {
                 frequenciesVM.loopPlayback.toggle()
             } label: {
                 Image(systemName: frequenciesVM.loopPlayback ? "repeat.circle.fill" : "repeat.circle")
-                    .font(.system(size: 28))
+                    .font(.system(size: 30))
                     .foregroundStyle(
                         frequenciesVM.loopPlayback
                             ? Theme.Colors.divineGold
@@ -139,7 +177,7 @@ struct FrequencyPlayerView: View {
                 }
             } label: {
                 Image(systemName: playButtonSymbol)
-                    .font(.system(size: 52))
+                    .font(.system(size: 56))
                     .foregroundStyle(hasAudio ? Theme.Colors.primaryText : Theme.Colors.tertiaryText)
             }
             .buttonStyle(.plain)
@@ -147,7 +185,7 @@ struct FrequencyPlayerView: View {
             .accessibilityLabel(hasAudio ? "Play or pause" : "Audio not yet available")
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
     }
 
     private var playButtonSymbol: String {
@@ -182,6 +220,7 @@ struct FrequencyPlayerView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, Theme.Spacing.sm)
     }
 
     // MARK: - Chrome
