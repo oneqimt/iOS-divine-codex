@@ -71,7 +71,7 @@ struct FrequencyPlayerView: View {
             frequenciesVM.applyLoopDefault(from: frequency)
         }
         .onDisappear {
-            if frequenciesVM.nowPlaying?.id == frequency.id, !frequenciesVM.isPlaying {
+            if frequenciesVM.nowPlaying?.id == frequency.id {
                 frequenciesVM.stop()
             }
         }
@@ -246,7 +246,12 @@ struct FrequencyPlayerView: View {
     }
 
     private var closeButton: some View {
-        Button { dismiss() } label: {
+        Button {
+            if frequenciesVM.nowPlaying?.id == frequency.id {
+                frequenciesVM.stop()
+            }
+            dismiss()
+        } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Theme.Colors.primaryText.opacity(0.85))
