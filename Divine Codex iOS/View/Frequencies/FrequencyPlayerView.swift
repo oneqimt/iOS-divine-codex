@@ -103,7 +103,9 @@ struct FrequencyPlayerView: View {
     @ViewBuilder
     private func coverArt(side: CGFloat) -> some View {
         Group {
-            if let asset = frequency.coverImage?.asset._ref {
+            if let videoURL = frequency.coverVideoURL.flatMap(URL.init(string:)) {
+                LoopingMutedVideoView(url: videoURL)
+            } else if let asset = frequency.coverImage?.asset._ref {
                 RemoteSanityImage(assetRef: asset)
                     .aspectRatio(1, contentMode: .fill)
             } else {

@@ -1,9 +1,9 @@
 # Sacred Frequencies — Feature Reference
 
-> **Status**: **End-to-end working** — Sanity → R2 → `AVPlayer` verified on device (June 2026)  
+> **Status**: **End-to-end working** — audio + muted hero video loops on device (June 2026)  
 > **Priority**: **Game changer** — primary App Store differentiation & user personalization  
 > **Related**: `IN_PROGRESS.md` (explorer), `ARCHITECTURE.md` (vision)  
-> **Last Updated**: June 8, 2026 (player polish + loop fixes)
+> **Last Updated**: June 8, 2026 (R2 cover video in player)
 
 ---
 
@@ -34,16 +34,18 @@ For Divine Codex, **Sacred Frequencies** is the anchor feature (journal + deeper
 Sacred Frequencies are **chants, vowels, and meditation sounds** authored in Sanity, with:
 
 - Instruction text (how to practice)  
-- Optional **hosted audio** (MP3 / AAC / HLS — URL in Sanity, not in Sanity Enterprise video hosting)  
-- **Cover images** (15–20 cohesive cosmic/sacred visuals for v1; reuse across surfaces)  
+- Optional **hosted audio** (MP3 / M4A — URL in Sanity, not in Sanity Enterprise video hosting)  
+- **Cover images** (Sanity CDN — list thumbnails + fallback hero)  
+- Optional **cover video loops** (~10s MP4 on R2 — muted hero in player; Grok Imagine samples verified)  
 - Links to **emanations** (`associatedEmanations`) so practice connects to the Explorer map  
 
 Content pipeline (Dennis):
 1. Author frequency text in Sanity Studio  
-2. Generate MP3s via AI or recording (review pronunciation of sacred names)  
-3. Host audio on **Cloudflare R2** (see [Media hosting](#media-hosting-assessment) below)
-4. Upload cover images to Sanity  
-5. Scale from **~5 hero frequencies** → 15–20 when the loop feels right  
+2. Generate MP3s / M4As via AI or recording (review pronunciation of sacred names)  
+3. Host audio on **Cloudflare R2** under `frequencies/` (see [Media hosting](#media-hosting-assessment))  
+4. Optional: generate short ambient loops (Grok Imagine) → export MP4 → R2 under `video/`  
+5. Upload cover images to Sanity (`coverImage` for library rows; video overrides hero in player)  
+6. Scale from **~5 hero frequencies** → 15–20 when the loop feels right
 
 **Do not** rip audio from YouTube — inspiration only; ship owned/licensed assets.
 
@@ -65,23 +67,31 @@ Document type: `frequency` (Studio nav: **Frequencies & Utterances**). Schema li
 | `pronunciationGuide` | Phonetic / sounding instructions |
 | `audio.url` | R2 HTTPS URL (`.m4a` or `.mp3`) |
 | `audio.loopable` | Default loop when player opens |
-| `coverImage` | Sanity CDN image (player hero + list thumbnail) |
+| `coverImage` | Sanity CDN image (list thumbnail; hero fallback) |
+| `coverVideo.url` | R2 MP4 — **muted looping hero** in player (replaces image when set) |
 | `associatedEmanations` | References to `emanation` docs |
 
 ### Editorial fields (Studio / website — not fetched by iOS v1)
 
 `phoneticSequence`, `variants`, `meaningOrIntention`, `category`, `recommendedRepetitions` — kept for Codex authoring. GROQ falls back to `phoneticSequence` for `shortDescription` / `pronunciationGuide` when those iOS fields are empty.
 
-### `audio` object shape
+### Media object shapes
 
 ```ts
 audio: {
-  url: string,              // R2 pub-….r2.dev or custom domain
+  url: string,              // R2 pub-….r2.dev/frequencies/….m4a
   loopable: boolean,        // initial loop toggle in app
   durationSeconds?: number, // optional; future Now Playing UI
   provider?: "r2" | "mux" | "other"
 }
+
+coverVideo: {
+  url: string,              // R2 pub-….r2.dev/video/….mp4
+  provider?: "r2"           // ops note; optional in app v1
+}
 ```
+
+**Hero priority in player:** `coverVideo.url` → `coverImage` → gradient placeholder.
 
 ### GROQ query (authoritative — matches iOS app)
 
@@ -97,6 +107,7 @@ audio: {
   "audioUrl": coalesce(audio.url, audioUrl),
   "audioLoopable": coalesce(audio.loopable, true),
   coverImage,
+  "coverVideoUrl": coalesce(coverVideo.url, coverVideoUrl),
   "associatedEmanationIds": associatedEmanations[]._ref
 }
 ```
@@ -130,6 +141,8 @@ iOS `Frequency.sampleSet` (DEBUG previews) mirrors the first two with practice c
 
 **Hosting:** Cover images stay in **Sanity CDN** — not R2. Easier Studio workflow; `RemoteSanityImage` already works.
 
+**Cover video (optional):** Short MP4 loops (~10s) from **Grok Imagine** (or similar) → export → R2 `video/` prefix. Muted in app; does not replace list thumbnail (still `coverImage` until we add video previews in the library).
+
 ---
 
 ## Media hosting assessment
@@ -161,7 +174,8 @@ iOS AVPlayer      →  plays URL from Sanity (no re-release to swap media)
 |------------|-----------|-------|
 | Cover images | **Sanity CDN** | Already integrated |
 | **MP3 frequencies** | **Cloudflare R2** | Simple files, loop-friendly, lowest cost |
-| **Short MP4** (≤ ~2–3 min) | **R2** progressive MP4 | `AVPlayer` plays direct MP4 |
+| **Frequency hero MP4** (~10s loop) | **R2** `video/` | `LoopingMutedVideoView` — muted, no controls |
+| **Short MP4** (≤ ~2–3 min) | **R2** progressive MP4 | `AVPlayer` / `VideoPlayer` — emanation detail, etc. |
 | **Longer / HD video** (later) | **Mux Video** (HLS) | Adaptive streaming, thumbnails, analytics |
 
 ### Why hybrid (not one provider)?
@@ -194,9 +208,10 @@ Paid Mux (if exceeded): roughly **$0.0024/min** storage, **$0.0008/min** deliver
 1. Create **free Cloudflare account** → enable **R2**  
 2. Create bucket (suggested name: `divine-codex-media`)  
 3. Enable **public access** (or custom domain later) for HTTPS URLs  
-4. Upload MP3s → copy public URL → Sanity `frequency.audio.url`  
-5. Upload short MP4s → copy URL → Sanity `emanation.video.url`  
-6. Cover images → upload in **Sanity Studio** only  
+4. Upload audio → `frequencies/` → Sanity `frequency.audio.url`  
+5. Upload hero loops → `video/` → Sanity `frequency.coverVideo.url`  
+6. Upload teaching clips → R2 or Mux later → Sanity `emanation.video.url`  
+7. Cover images → upload in **Sanity Studio** only
 
 **No app update** required when adding or swapping media — change URL in Sanity.
 
@@ -223,9 +238,13 @@ Mux workflow: upload → HLS playback URL → paste into Sanity `video.url`. iOS
 ```ts
 // frequency
 audio: {
-  url: string,              // R2 HTTPS URL to .mp3 (or .m4a)
+  url: string,              // R2 HTTPS URL to .m4a (or .mp3)
   loopable: boolean,
-  provider?: "r2" | "mux"   // ops note for Dennis; optional in app v1
+  provider?: "r2" | "mux"
+}
+coverVideo: {
+  url: string,              // R2 HTTPS URL to .mp4 (muted hero loop)
+  provider?: "r2"
 }
 
 // emanation (existing video object — extend provider)
@@ -243,7 +262,8 @@ video: {
 3. Upload MP3 to R2 bucket  
 4. Copy HTTPS URL into Sanity `audio.url`  
 5. Upload cover image to Sanity `coverImage`  
-6. For video: start with R2 MP4; re-host on Mux later if needed (update URL once)  
+6. Optional: Grok Imagine → MP4 → R2 `video/` → Sanity `coverVideo.url`  
+7. Emanation teaching video: R2 MP4 now; Mux HLS later if needed (update URL once)
 
 **Do not** rip audio/video from YouTube — owned or licensed assets only.
 
@@ -261,6 +281,19 @@ Cloudflare warns against relying on the **Public Development URL** in production
 
 **Audio formats:** `.m4a` and `.mp3` are both fine for R2 + iOS `AVPlayer`.
 
+**Video formats:** `.mp4` (H.264) for hero loops and short clips. Test in Safari before Sanity.
+
+### R2 bucket layout (June 2026)
+
+| Prefix | Example | Sanity field |
+|--------|---------|--------------|
+| `frequencies/` | `…/frequencies/test-divine-codex.m4a` | `audio.url` |
+| `video/` | `…/video/sample1.mp4` | `coverVideo.url` |
+
+**Sample hero clips (verified in app):**
+- `https://pub-ecedb50375844dbabfd670477da2bdda.r2.dev/video/sample1.mp4`
+- `https://pub-ecedb50375844dbabfd670477da2bdda.r2.dev/video/sample2.mp4`
+
 ### R2 setup checklist (Dennis)
 
 - [x] Create free Cloudflare account  
@@ -272,6 +305,8 @@ Cloudflare warns against relying on the **Public Development URL** in production
 - [x] Verify URL plays in Safari  
 - [x] Paste URL into Sanity `frequency` → `audio.url`  
 - [x] Confirm app player plays audio after fetch  
+- [x] Upload test hero MP4s to R2 `video/` prefix  
+- [x] Paste `coverVideo.url` in Sanity → muted loop in `FrequencyPlayerView`  
 - [ ] Before App Store: attach **custom domain** to bucket; update Sanity URLs if domain changes
 
 **Dev base URL (June 2026):** `https://pub-ecedb50375844dbabfd670477da2bdda.r2.dev`
@@ -301,16 +336,18 @@ Cloudflare warns against relying on the **Public Development URL** in production
 
 1. **Home** → tap **Sacred Frequencies** (Liquid Glass button above tagline)  
 2. **FrequenciesLibraryView** — list all frequencies; filter **favorites** (heart in toolbar)  
-3. Tap row → **FrequencyPlayerView** (`fullScreenCover`) — hero cover art, play/pause, loop, practice text, favorite  
+3. Tap row → **FrequencyPlayerView** (`fullScreenCover`) — hero video loop or cover art, play/pause, loop, practice text, favorite
 4. **Close** (✕) returns to library; list remains underneath  
 5. Without `audioUrl`: text practice + “audio coming soon” banner still works  
 
 ### Player layout (June 2026)
 
 - **`onGeometryChange`** (not `GeometryReader`) drives responsive hero cover sizing  
-- Cover art is a **dynamic square** (~54–62% of viewport height) — dominates first screen on phone and iPad  
-- Title + transport controls sit below cover; pronunciation / practice text scrolls when needed on smaller devices  
-- Placeholder gradient + waveform icon when `coverImage` is missing
+- Hero is a **dynamic square** (~54–62% of viewport height) — dominates first screen on phone and iPad  
+- **`coverVideo.url`:** `LoopingMutedVideoView` — muted, seamless loop, no on-screen controls (audio is separate)  
+- **`coverImage`:** `RemoteSanityImage` when no video; also used for **library list** thumbnails  
+- Title + transport controls sit below hero; pronunciation / practice text scrolls when needed on smaller devices  
+- Placeholder gradient + waveform icon when neither video nor image is set
 
 ### Code map
 
@@ -321,6 +358,7 @@ Cloudflare warns against relying on the **Public Development URL** in production
 | `ViewModel/SacredFrequenciesViewModel.swift` | `AVPlayer`, loop, favorites (UserDefaults) |
 | `View/Frequencies/FrequenciesLibraryView.swift` | Browse + favorites filter |
 | `View/Frequencies/FrequencyPlayerView.swift` | Full-screen player UI |
+| `Components/LoopingMutedVideoView.swift` | Muted R2 MP4 hero loop (`AVPlayerLooper`) |
 | `View/Home/HomeView.swift` | Home CTA + `fullScreenCover` entry |
 | `Divine_Codex_iOSApp.swift` | Injects `SacredFrequenciesViewModel`; prefetches on launch |
 
@@ -358,8 +396,10 @@ Cloudflare warns against relying on the **Public Development URL** in production
 - [x] Create **Cloudflare account** + R2 bucket (see [R2 setup checklist](#r2-setup-checklist-dennis))  
 - [x] Align Sanity Studio `frequency` fields with GROQ above (`title`, `audio`, `practiceNotes`, `order`, …)  
 - [x] First test frequency with R2 audio → verified in app  
+- [x] First hero MP4 loops (Grok Imagine) → R2 `video/` → verified in player  
 - [ ] Publish 3–5 hero frequencies with practice copy  
 - [ ] Upload 3+ `.m4a` files to R2 → `audio.url` in Sanity  
+- [ ] Pair hero MP4s + audio + `coverImage` per frequency  
 - [ ] Upload 8–10 cover images to Sanity
 
 ### Near term (code)
@@ -369,6 +409,7 @@ Cloudflare warns against relying on the **Public Development URL** in production
 - [ ] Lock screen / **Now Playing** info  
 - [ ] Mini player while browsing library  
 - [ ] User playlists or “practice sets”  
+- [ ] Video thumbnail or autopreview in **library list** (optional)
 
 ### Medium term (personalization stack)
 
@@ -443,6 +484,17 @@ Demo account not required if favorites work with iCloud / local storage and cont
 - User loop toggle no longer reset when `play()` starts a new `AVPlayerItem`  
 - Loop off: rewind at track end so play restarts from beginning  
 
+### June 8, 2026 — Cover video hero loops
+
+**Built:**
+- `Frequency.coverVideoURL` + GROQ `coverVideoUrl` from Sanity `coverVideo.url`  
+- `LoopingMutedVideoView` — muted `AVPlayerLooper` for ~10s R2 MP4 clips  
+- Hero priority: video → image → placeholder; practice audio unchanged  
+
+**Content:**
+- Grok Imagine samples uploaded to R2 `video/sample1.mp4`, `video/sample2.mp4`  
+- Verified in `FrequencyPlayerView` on device  
+
 ---
 
 ## Open questions
@@ -450,7 +502,19 @@ Demo account not required if favorites work with iCloud / local storage and cont
 - R2 **custom domain** timing (before TestFlight vs App Store)  
 - Whether favorites migrate to CloudKit before or after first TestFlight  
 - Link frequencies from Explorer detail by `associatedEmanationIds` match — UI pattern (button vs section)  
-- When to move first video from R2 → Mux (length/quality trigger)
+- When to move first video from R2 → Mux (length/quality trigger)  
+- Whether to split a future **`VIDEO.md`** when emanation teaching video + encoding pipeline docs outgrow this file (see note below)
+
+### Doc strategy: `FREQUENCIES.md` vs `VIDEO.md`
+
+**Keep cover-video notes here** — frequency hero loops are part of the Sacred Frequencies player, same R2 bucket, same Sanity `frequency` document.
+
+**Add `Agents/VIDEO.md` later** if/when you need a cross-cutting reference for:
+- Emanation teaching videos (`emanation.video`)  
+- Mux migration, HLS, encoding specs  
+- Grok Imagine / production workflow shared across app + website  
+
+Until then, one file avoids drift.
 
 ---
 

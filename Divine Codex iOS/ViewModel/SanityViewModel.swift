@@ -110,6 +110,7 @@ final class SanityViewModel {
           "audioUrl": coalesce(audio.url, audioUrl),
           "audioLoopable": coalesce(audio.loopable, true),
           coverImage,
+          "coverVideoUrl": coalesce(coverVideo.url, coverVideoUrl),
           "associatedEmanationIds": associatedEmanations[]._ref
         }
         """

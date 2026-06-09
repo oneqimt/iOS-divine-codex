@@ -21,6 +21,8 @@ struct Frequency: Identifiable, Sendable, Equatable, Hashable {
     let audioURL: String?
     let audioLoopable: Bool?
     let coverImage: SanityImage?
+    /// Optional muted hero loop (MP4 from R2). Replaces cover image when set.
+    let coverVideoURL: String?
     /// Flattened emanation refs for linking practice to the cosmology map.
     let associatedEmanationIds: [String]?
 
@@ -37,6 +39,7 @@ struct Frequency: Identifiable, Sendable, Equatable, Hashable {
         case audioURL = "audioUrl"
         case audioLoopable
         case coverImage
+        case coverVideoURL = "coverVideoUrl"
         case associatedEmanationIds
     }
 }
@@ -57,6 +60,7 @@ extension Frequency {
             audioURL: nil,
             audioLoopable: true,
             coverImage: nil,
+            coverVideoURL: nil,
             associatedEmanationIds: ["sample-monad"]
         ),
         Frequency(
@@ -70,6 +74,7 @@ extension Frequency {
             audioURL: nil,
             audioLoopable: true,
             coverImage: nil,
+            coverVideoURL: nil,
             associatedEmanationIds: ["sample-sophia"]
         )
     ]
