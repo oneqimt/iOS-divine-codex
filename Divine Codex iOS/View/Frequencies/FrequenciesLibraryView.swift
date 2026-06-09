@@ -2,7 +2,7 @@
 //  FrequenciesLibraryView.swift
 //  Divine Codex iOS
 //
-//  Browse and play Sacred Frequencies from Sanity. Supports favorites filtering.
+//  Browse and play Sacred Frequencies from Sanity. Favorites via each row's heart.
 //
 
 import SwiftUI
@@ -13,24 +13,21 @@ struct FrequenciesLibraryView: View {
     @Environment(SacredFrequenciesViewModel.self) private var frequenciesVM
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showFavoritesOnly = false
     @State private var selectedFrequency: Frequency?
+
+    /// Extra space between the status bar (time/date) and the library header.
+    private let statusBarBreathingRoom: CGFloat = 18
 
     private var allFrequencies: [Frequency] {
         sanity.frequencies
     }
 
-    private var displayedFrequencies: [Frequency] {
-        if showFavoritesOnly {
-            return frequenciesVM.favorites(from: allFrequencies)
-        }
-        return allFrequencies
-    }
-
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            libraryHeader
+
             ZStack {
-                Theme.Colors.background.ignoresSafeArea()
+                Theme.Colors.background
 
                 if allFrequencies.isEmpty {
                     emptyState
@@ -38,48 +35,42 @@ struct FrequenciesLibraryView: View {
                     frequencyList
                 }
             }
-            .navigationTitle("Sacred Frequencies")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                        .foregroundStyle(Theme.Colors.secondaryText)
-                }
-                if !allFrequencies.isEmpty {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showFavoritesOnly.toggle()
-                        } label: {
-                            Image(systemName: showFavoritesOnly ? "heart.fill" : "heart")
-                                .foregroundStyle(
-                                    showFavoritesOnly
-                                        ? Theme.Colors.divineGold
-                                        : Theme.Colors.secondaryText
-                                )
-                        }
-                        .accessibilityLabel(showFavoritesOnly ? "Show all" : "Show favorites")
-                    }
-                }
-            }
-            .fullScreenCover(item: $selectedFrequency) { frequency in
-                FrequencyPlayerView(frequency: frequency, frequenciesVM: frequenciesVM)
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(Theme.Colors.background)
+        .fullScreenCover(item: $selectedFrequency) { frequency in
+            FrequencyPlayerView(frequency: frequency, frequenciesVM: frequenciesVM)
+        }
+    }
+
+    private var libraryHeader: some View {
+        HStack {
+            Button("Close") { dismiss() }
+                .font(.system(size: 17, weight: .regular, design: .rounded))
+                .foregroundStyle(Theme.Colors.secondaryText)
+
+            Spacer()
+
+            Text("Sacred Frequencies")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.Colors.primaryText)
+
+            Spacer()
+
+            // Balances the leading Close control so the title stays centered.
+            Color.clear
+                .frame(width: 52, height: 1)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, statusBarBreathingRoom)
+        .padding(.bottom, 12)
     }
 
     private var frequencyList: some View {
         ScrollView {
             LazyVStack(spacing: 14) {
-                if showFavoritesOnly && displayedFrequencies.isEmpty {
-                    Text("No favorites yet — tap the heart on a frequency you cherish.")
-                        .font(.system(size: 15, design: .rounded))
-                        .foregroundStyle(Theme.Colors.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 40)
-                        .padding(.horizontal)
-                }
-
-                ForEach(displayedFrequencies) { frequency in
+                ForEach(allFrequencies) { frequency in
                     FrequencyRow(
                         frequency: frequency,
                         isFavorite: frequenciesVM.isFavorite(frequency),
@@ -89,8 +80,11 @@ struct FrequenciesLibraryView: View {
                     )
                 }
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.top, 15)
+            .padding(.bottom, 20)
         }
+        .scrollClipDisabled()
     }
 
     private var emptyState: some View {
@@ -115,6 +109,7 @@ struct FrequenciesLibraryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 15)
     }
 }
 
@@ -127,6 +122,10 @@ private struct FrequencyRow: View {
     let isPlaying: Bool
     let onPlay: () -> Void
     let onToggleFavorite: () -> Void
+
+    private var rowShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous)
+    }
 
     var body: some View {
         Button(action: onPlay) {
@@ -163,11 +162,15 @@ private struct FrequencyRow: View {
                 .buttonStyle(.plain)
             }
             .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: Theme.Radius.medium)
-                    .fill(Color.black.opacity(0.35))
-                    .glassEffect(.clear, in: .rect(cornerRadius: Theme.Radius.medium))
+                rowShape.fill(Color.black.opacity(0.70))
             }
+            .overlay {
+                // strokeBorder draws inside the shape so corners are not clipped by the row bounds.
+                rowShape.strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+            }
+            .contentShape(rowShape)
         }
         .buttonStyle(.plain)
     }
@@ -176,18 +179,18 @@ private struct FrequencyRow: View {
     private var rowThumbnail: some View {
         Group {
             if let asset = frequency.coverImage?.asset._ref {
-                RemoteSanityImage(assetRef: asset)
-                    .aspectRatio(1, contentMode: .fill)
+                RemoteSanityImage(assetRef: asset, contentMode: .fill)
             } else {
                 Image(systemName: "waveform")
-                    .font(.system(size: 22))
+                    .font(.system(size: 28))
                     .foregroundStyle(Theme.Colors.divineGold.opacity(0.8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Theme.Colors.accent.opacity(0.2))
+                    .background(Theme.Colors.accent.opacity(0.8))
             }
         }
-        .frame(width: 56, height: 56)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(width: 80, height: 80)
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 2)
     }
 }
 

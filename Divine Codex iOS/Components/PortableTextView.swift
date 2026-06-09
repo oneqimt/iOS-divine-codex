@@ -89,6 +89,7 @@ private struct PortableTextImageBlock: View {
 /// (the media gallery), so it is intentionally non-private.
 struct RemoteSanityImage: View {
     let assetRef: String
+    var contentMode: ContentMode = .fit
 
     var body: some View {
         if let url = SanityImageURL.url(forAssetRef: assetRef) {
@@ -97,7 +98,7 @@ struct RemoteSanityImage: View {
                 case .success(let image):
                     image
                         .resizable()
-                        .aspectRatio(contentMode: .fit)
+                        .aspectRatio(contentMode: contentMode)
                 case .failure:
                     placeholder(systemImage: "photo")
                 case .empty:
