@@ -35,11 +35,11 @@ struct ExplorerView: View {
         VStack(spacing: Theme.Spacing.xl) {
             // Hero / Logo area
             VStack(spacing: Theme.Spacing.md) {
-                /*Image("logo")
+                Image("monad-emanation")
                     .resizable()
                     .scaledToFit()
-                    .frame(maxHeight: 180)
-                    .padding(.horizontal, Theme.Spacing.xl)*/
+                    .frame(maxHeight: 400)
+                    .padding(.horizontal, Theme.Spacing.xl)
 
                 Text("The Cosmology Explorer")
                     .sacredHeading()

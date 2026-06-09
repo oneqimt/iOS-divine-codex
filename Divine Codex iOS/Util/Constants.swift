@@ -12,7 +12,7 @@ import Foundation
 // MARK: - Asset Names
 /// Names of image assets bundled in the app. Kept as a flat array for now;
 /// consider promoting to an enum when accessed from multiple sites.
-let IMAGE_NAMES : [String] = ["monad-emanation.jpg","monad-eye-refined.jpg","monad-source.jpg","logo.png", "icon.png"]
+let IMAGE_NAMES : [String] = ["monad-emanation","monad-eye-refined","monad-source","logo", "icon"]
 
 
 
