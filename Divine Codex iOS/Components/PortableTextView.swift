@@ -85,7 +85,7 @@ private struct PortableTextImageBlock: View {
 /// …and remove the `AsyncImage` branch. This is the only place that needs to
 /// change, so adopting caching later is a one-view edit.
 ///
-/// Used by both `PortableTextView` (inline image blocks) and `CosmoSidebar`
+/// Used by `PortableTextView` (inline image blocks) and `CosmoDetailView` media
 /// (the media gallery), so it is intentionally non-private.
 struct RemoteSanityImage: View {
     let assetRef: String

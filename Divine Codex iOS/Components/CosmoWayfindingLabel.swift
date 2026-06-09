@@ -12,6 +12,9 @@ struct CosmoWayfindingLabel: View {
     let title: String
     var action: (() -> Void)?
 
+    /// Minimum comfortable tap height (detail back breadcrumb, stage path).
+    private let minTapHeight: CGFloat = 48
+
     var body: some View {
         Group {
             if let action {
@@ -25,13 +28,14 @@ struct CosmoWayfindingLabel: View {
         }
         .accessibilityLabel(title)
         .accessibilityHint(action != nil ? "Returns to the previous layer" : "")
+        .accessibilityAddTraits(action != nil ? .isButton : [])
     }
 
     private var labelContent: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             if action != nil {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
             }
             Text(title)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -39,7 +43,9 @@ struct CosmoWayfindingLabel: View {
                 .multilineTextAlignment(.leading)
         }
         .foregroundStyle(Theme.Colors.tertiaryText)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: minTapHeight, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }

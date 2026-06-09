@@ -34,9 +34,10 @@ struct CosmoDetailView: View {
             }
 
             CosmoWayfindingLabel(title: returnLabel, action: onBack)
-                .padding(.top, 8)
-                .padding(.leading, 20)
+                .padding(.top, 4)
+                .padding(.horizontal, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .zIndex(1)
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
