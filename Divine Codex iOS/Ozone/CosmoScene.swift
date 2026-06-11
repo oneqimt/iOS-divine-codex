@@ -92,7 +92,7 @@ struct CosmoScene: View {
                 Color.black.ignoresSafeArea()
 
                 Group {
-                    if RealityKitSupport.isSupported {
+                    if CosmoRealityKitSupport.isSupported {
                         GeometryReader { geometry in
                             ZStack {
                                 RealityView { content in
@@ -651,7 +651,7 @@ private struct UnsupportedRealityKitView: View {
                 .foregroundStyle(Theme.Colors.divineGold)
             Text("Cosmology Explorer Unavailable")
                 .font(Theme.Fonts.heroTitle)
-            Text(RealityKitSupport.unsupportedMessage)
+            Text(CosmoRealityKitSupport.unsupportedMessage)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }

@@ -24,6 +24,6 @@ Kept for reference until safe to delete.
 | `ExplorerNodeButton.swift` | 3D scene node buttons |
 | `NodeDetailView.swift` | Floating card detail for 3D scene |
 | `NodeLabelView.swift` | Labels for ExplorerNodeButton |
-| `RealityKitSupport.swift` | Device capability checks for CosmoScene |
+| `CosmoRealityKitSupport.swift` (in `Components/Reality/`) | Device capability checks — lifted from Ozone |
 
 Moved: June 2026.

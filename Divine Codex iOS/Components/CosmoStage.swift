@@ -64,12 +64,29 @@ struct CosmoStage: View {
     @ViewBuilder
     private func monadHero(in size: CGSize) -> some View {
         if let monad = viewModel.monad {
-            heroButton(node: monad, diameter: Self.heroDiameter(.monad, in: size)) {
+            let diameter = Self.heroDiameter(.monad, in: size)
+            let tapAction: () -> Void = {
                 if viewModel.pleroma != nil {
                     viewModel.drillToPleroma()
                 } else {
                     onSelectNode(monad)
                 }
+            }
+            let longPressAction: () -> Void = {
+                viewModel.selectNode(monad)
+                onSelectNode(monad)
+            }
+
+            if CosmoRealityKitSupport.isSupported {
+                SpinningCosmoOrbView(
+                    node: monad,
+                    diameter: diameter,
+                    isEmphasized: true,
+                    onTap: tapAction,
+                    onLongPress: longPressAction
+                )
+            } else {
+                heroButton(node: monad, diameter: diameter, action: tapAction)
             }
         } else {
             missingNodeMessage("Monad")
@@ -222,11 +239,11 @@ struct CosmoStage: View {
             switch viewModel.stageDepth {
             case .monad:
                 if viewModel.pleroma != nil {
-                    hintLabel("Tap to enter · Hold for details")
+                    hintLabel("Tap to enter · Long press for details")
                 }
             case .pleroma:
                 if !viewModel.displayUnits.isEmpty {
-                    hintLabel("Tap to meet the Aeons · Swipe left to return · Hold for details")
+                    hintLabel("Tap to meet the Aeons · Swipe left to return · Long press for details")
                 } else {
                     hintLabel("Swipe left to return")
                 }
