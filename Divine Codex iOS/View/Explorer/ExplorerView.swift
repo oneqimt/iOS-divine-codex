@@ -92,20 +92,13 @@ struct ExplorerView: View {
 
         }
         .padding(.top, Theme.Spacing.lg)
-        .onAppear {
-            print("⏱️ ExplorerView.onAppear at \(Date().timeIntervalSince1970)")
-        }
-        .task {
-            print("⏱️ ExplorerView.task (first render) at \(Date().timeIntervalSince1970)")
+        .background {
+            if CosmoRealityKitSupport.isSupported {
+                RealityKitWarmupView()
+            }
         }
         .fullScreenCover(isPresented: $showCosmologyScene) {
             CosmoExplorerView(explorerViewModel: explorerViewModel)
-                .onAppear {
-                    explorerViewModel.didEnterImmersiveScene()
-                }
-                .onDisappear {
-                    explorerViewModel.didExitImmersiveScene()
-                }
         }
     }
 }

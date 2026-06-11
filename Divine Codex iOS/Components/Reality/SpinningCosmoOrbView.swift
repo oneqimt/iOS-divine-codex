@@ -2,7 +2,8 @@
 //  SpinningCosmoOrbView.swift
 //  Divine Codex iOS
 //
-//  RealityKit orb for the spatial stage. Tap and long-press match CosmoStage.heroButton.
+//  Monad hero orb: looping video background (Sanity video.url) with a pulsing
+//  center dot above, or a RealityKit sphere when no video is set.
 //
 
 import RealityKit
@@ -16,15 +17,21 @@ struct SpinningCosmoOrbView: View {
     var showsLabel: Bool = true
     var onTap: () -> Void
     var onLongPress: () -> Void
+    var onSceneReady: (() -> Void)? = nil
 
     @State private var sceneUpdateSubscription: EventSubscription?
+    @State private var didSignalReady = false
 
     private let modelRadius: Float = 0.55
+
+    private var usesVideoBackground: Bool {
+        node.videoURL != nil
+    }
 
     var body: some View {
         VStack(spacing: 10) {
             ZStack {
-                realityCanvas
+                orbFill
                     .frame(width: diameter, height: diameter)
                     .clipShape(Circle())
                     .allowsHitTesting(false)
@@ -52,30 +59,57 @@ struct SpinningCosmoOrbView: View {
         .accessibilityHint("Tap to enter. Long press for details.")
     }
 
-    // MARK: - Reality canvas
+    // MARK: - Orb fill (video + dot, or RealityKit shell)
+
+    @ViewBuilder
+    private var orbFill: some View {
+        if let videoURL = node.videoURL {
+            ZStack {
+                LoopingMutedVideoView(url: videoURL)
+                Circle()
+                    .fill(.black.opacity(0.12))
+                MonadCenterPulseView(diameter: diameter * 0.11)
+            }
+            .onAppear { signalReady() }
+        } else if CosmoRealityKitSupport.isSupported {
+            realityCanvas
+        } else {
+            ZStack {
+                Circle()
+                    .fill(nodeColor.gradient)
+                MonadCenterPulseView(diameter: diameter * 0.11)
+            }
+            .onAppear { signalReady() }
+        }
+    }
+
+    // MARK: - Reality canvas (no video fallback)
 
     private var realityCanvas: some View {
-        RealityView { content in
-            let orb = CosmoOrbEntityBuilder.makeOrbRoot(for: node, radius: modelRadius)
-            content.add(orb)
+        ZStack {
+            RealityView { content in
+                let orb = CosmoOrbEntityBuilder.makeOrbRoot(for: node, radius: modelRadius)
+                content.add(orb)
 
-            let camera = PerspectiveCamera()
-            camera.camera.fieldOfViewInDegrees = 42
-            let cameraPosition = SIMD3<Float>(0, 0, 1.65)
-            camera.position = cameraPosition
-            camera.look(at: .zero, from: cameraPosition, relativeTo: nil)
-            content.add(camera)
+                let camera = PerspectiveCamera()
+                camera.camera.fieldOfViewInDegrees = 42
+                let cameraPosition = SIMD3<Float>(0, 0, 1.65)
+                camera.position = cameraPosition
+                camera.look(at: .zero, from: cameraPosition, relativeTo: nil)
+                content.add(camera)
 
-            var pulsePhase: Float = 0
-            sceneUpdateSubscription?.cancel()
-            sceneUpdateSubscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                pulsePhase += Float(event.deltaTime)
-                Self.updateCenterPulse(on: orb, phase: pulsePhase)
+                var pulsePhase: Float = 0
+                sceneUpdateSubscription?.cancel()
+                sceneUpdateSubscription = content.subscribe(to: SceneEvents.Update.self) { event in
+                    pulsePhase += Float(event.deltaTime)
+                    Self.updateCenterPulse(on: orb, phase: pulsePhase)
+                    signalReadyOnce()
+                }
             }
-        }
-        .onDisappear {
-            sceneUpdateSubscription?.cancel()
-            sceneUpdateSubscription = nil
+            .onDisappear {
+                sceneUpdateSubscription?.cancel()
+                sceneUpdateSubscription = nil
+            }
         }
     }
 
@@ -109,6 +143,20 @@ struct SpinningCosmoOrbView: View {
             return Color(ui)
         }
         return Theme.Colors.divineGold
+    }
+
+    // MARK: - Ready signal
+
+    private func signalReady() {
+        guard !didSignalReady else { return }
+        didSignalReady = true
+        onSceneReady?()
+    }
+
+    private func signalReadyOnce() {
+        DispatchQueue.main.async {
+            signalReady()
+        }
     }
 
     // MARK: - Animation

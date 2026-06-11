@@ -14,6 +14,7 @@ struct CosmoStage: View {
 
     let viewModel: ExplorerViewModel
     var onSelectNode: (ExplorerNode) -> Void
+    var onMonadReady: (() -> Void)? = nil
 
     var body: some View {
         GeometryReader { geo in
@@ -77,16 +78,18 @@ struct CosmoStage: View {
                 onSelectNode(monad)
             }
 
-            if CosmoRealityKitSupport.isSupported {
+            if monad.videoURL != nil || CosmoRealityKitSupport.isSupported {
                 SpinningCosmoOrbView(
                     node: monad,
                     diameter: diameter,
                     isEmphasized: true,
                     onTap: tapAction,
-                    onLongPress: longPressAction
+                    onLongPress: longPressAction,
+                    onSceneReady: onMonadReady
                 )
             } else {
                 heroButton(node: monad, diameter: diameter, action: tapAction)
+                    .onAppear { onMonadReady?() }
             }
         } else {
             missingNodeMessage("Monad")

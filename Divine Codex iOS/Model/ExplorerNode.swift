@@ -55,6 +55,13 @@ enum ExplorerNode: Identifiable, Hashable {
         emanation.parentId
     }
 
+    /// Optional R2 / HLS hero clip for the spatial orb (Sanity `video.url`).
+    var videoURL: URL? {
+        guard let raw = emanation.video?.url?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty else { return nil }
+        return URL(string: raw)
+    }
+
     // Manual Equatable + Hashable conformance based on stable ID.
     static func == (lhs: ExplorerNode, rhs: ExplorerNode) -> Bool {
         lhs.id == rhs.id

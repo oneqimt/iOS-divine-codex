@@ -25,11 +25,11 @@ enum CosmoOrbEntityBuilder {
     }
 
     static func pulseScale(phase: Float) -> Float {
-        1.0 + 0.02 * sin(phase * 2.2)
+        1.0 + 0.08 * sin(phase * 2.2)
     }
 
     static func pulseBlend(phase: Float) -> Float {
-        0.5 + 0.5 * sin(phase * 2.2)
+        0.5 + 0.9 * sin(phase * 2.2)
     }
 
     /// `spinGroup` holds the shell and is what we rotate. The center dot is a
