@@ -13,23 +13,23 @@ enum CosmoOrbEntityBuilder {
 
     /// Violet ↔ green palette for the Monad center pulse.
     static let pulseViolet = UIColor(red: 0.48, green: 0.32, blue: 0.95, alpha: 1.0)
-    static let pulseGreen = UIColor(red: 0.22, green: 0.82, blue: 0.52, alpha: 1.0)
+    static let pulseGreen = UIColor(red: 0.12, green: 0.40, blue: 0.34, alpha: 1.0)
 
     static func pulseColor(blend greenAmount: Float) -> UIColor {
         let t = CGFloat(min(max(greenAmount, 0), 1))
         let inverse = 1 - t
-        let red = 0.48 * inverse + 0.22 * t
-        let green = 0.32 * inverse + 0.82 * t
-        let blue = 0.95 * inverse + 0.52 * t
+        let red = 0.48 * inverse + 0.12 * t
+        let green = 0.32 * inverse + 0.40 * t
+        let blue = 0.95 * inverse + 0.34 * t
         return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
     }
 
     static func pulseScale(phase: Float) -> Float {
-        1.0 + 0.08 * sin(phase * 2.2)
+        1.0 + 0.06 * sin(phase * 1.3)
     }
 
     static func pulseBlend(phase: Float) -> Float {
-        0.5 + 0.9 * sin(phase * 2.2)
+        0.5 + 0.38 * sin(phase * 1.3)
     }
 
     /// `spinGroup` holds the shell and is what we rotate. The center dot is a

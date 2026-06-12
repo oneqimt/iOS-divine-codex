@@ -78,19 +78,15 @@ struct CosmoStage: View {
                 onSelectNode(monad)
             }
 
-            if monad.videoURL != nil || CosmoRealityKitSupport.isSupported {
-                SpinningCosmoOrbView(
+            SpinningCosmoOrbView(
                     node: monad,
                     diameter: diameter,
                     isEmphasized: true,
                     onTap: tapAction,
                     onLongPress: longPressAction,
-                    onSceneReady: onMonadReady
+                    onSceneReady: onMonadReady,
+                    isStageVisible: viewModel.selectedNode == nil
                 )
-            } else {
-                heroButton(node: monad, diameter: diameter, action: tapAction)
-                    .onAppear { onMonadReady?() }
-            }
         } else {
             missingNodeMessage("Monad")
         }

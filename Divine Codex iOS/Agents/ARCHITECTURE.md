@@ -9,6 +9,7 @@ The iOS app is a spiritual and technical counterpart to the Next.js web experien
 ## Core Philosophy & Tone (Shared with Web)
 
 - Humanity carries a **Divine Spark** — a fractal of the Monad within each soul.
+- Monad is THE ONE. Valenti
 - Sophia played a key role in bringing this spark into the lower realms.
 - Jesus is a **revealer of gnosis**, not a traditional external savior.
 - Emphasis on inner awakening, remembrance, and return to the Monad.

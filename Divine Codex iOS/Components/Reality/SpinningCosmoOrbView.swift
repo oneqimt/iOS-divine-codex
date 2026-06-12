@@ -2,12 +2,12 @@
 //  SpinningCosmoOrbView.swift
 //  Divine Codex iOS
 //
-//  Monad hero orb: looping video background (Sanity video.url) with a pulsing
-//  center dot above, or a RealityKit sphere when no video is set.
+//  Monad hero orb: optional looping video (Sanity video.url) or a matte SwiftUI
+//  sphere with a pulsing center dot. RealityKit is reserved for future wireframe work.
 //
 
-import RealityKit
 import SwiftUI
+import UIKit
 
 struct SpinningCosmoOrbView: View {
 
@@ -18,37 +18,19 @@ struct SpinningCosmoOrbView: View {
     var onTap: () -> Void
     var onLongPress: () -> Void
     var onSceneReady: (() -> Void)? = nil
+    /// False while detail sits above the stage — restarts pulse when true again.
+    var isStageVisible: Bool = true
 
-    @State private var sceneUpdateSubscription: EventSubscription?
     @State private var didSignalReady = false
-
-    private let modelRadius: Float = 0.55
-
-    private var usesVideoBackground: Bool {
-        node.videoURL != nil
-    }
 
     var body: some View {
         VStack(spacing: 10) {
-            ZStack {
-                orbFill
-                    .frame(width: diameter, height: diameter)
-                    .clipShape(Circle())
-                    .allowsHitTesting(false)
-
-                Circle()
-                    .stroke(.white.opacity(isEmphasized ? 0.45 : 0.22), lineWidth: isEmphasized ? 2 : 1)
-                    .frame(width: diameter, height: diameter)
-                    .allowsHitTesting(false)
-            }
-            .frame(width: diameter, height: diameter)
-            .contentShape(Circle())
-            .onTapGesture(perform: onTap)
-            .onLongPressGesture(minimumDuration: 0.45, perform: onLongPress)
-            .shadow(
-                color: nodeColor.opacity(isEmphasized ? 0.65 : 0.35),
-                radius: isEmphasized ? 22 : 10
-            )
+            orbFill
+                .frame(width: diameter, height: diameter)
+                .clipShape(Circle())
+                .contentShape(Circle())
+                .onTapGesture(perform: onTap)
+                .onLongPressGesture(minimumDuration: 0.45, perform: onLongPress)
 
             if showsLabel {
                 orbLabel
@@ -59,58 +41,47 @@ struct SpinningCosmoOrbView: View {
         .accessibilityHint("Tap to enter. Long press for details.")
     }
 
-    // MARK: - Orb fill (video + dot, or RealityKit shell)
+    // MARK: - Orb fill
 
     @ViewBuilder
     private var orbFill: some View {
         if let videoURL = node.videoURL {
             ZStack {
                 LoopingMutedVideoView(url: videoURL)
-                Circle()
-                    .fill(.black.opacity(0.12))
-                MonadCenterPulseView(diameter: diameter * 0.11)
+                MonadCenterPulseView(
+                    diameter: diameter * 0.11,
+                    isAnimating: isStageVisible
+                )
             }
+            .allowsHitTesting(false)
             .onAppear { signalReady() }
-        } else if CosmoRealityKitSupport.isSupported {
-            realityCanvas
         } else {
             ZStack {
-                Circle()
-                    .fill(nodeColor.gradient)
-                MonadCenterPulseView(diameter: diameter * 0.11)
+                Circle().fill(defaultOrbGradient)
+                MonadCenterPulseView(
+                    diameter: diameter * 0.11,
+                    isAnimating: isStageVisible
+                )
             }
+            .allowsHitTesting(false)
             .onAppear { signalReady() }
         }
     }
-
-    // MARK: - Reality canvas (no video fallback)
-
-    private var realityCanvas: some View {
-        ZStack {
-            RealityView { content in
-                let orb = CosmoOrbEntityBuilder.makeOrbRoot(for: node, radius: modelRadius)
-                content.add(orb)
-
-                let camera = PerspectiveCamera()
-                camera.camera.fieldOfViewInDegrees = 42
-                let cameraPosition = SIMD3<Float>(0, 0, 1.65)
-                camera.position = cameraPosition
-                camera.look(at: .zero, from: cameraPosition, relativeTo: nil)
-                content.add(camera)
-
-                var pulsePhase: Float = 0
-                sceneUpdateSubscription?.cancel()
-                sceneUpdateSubscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                    pulsePhase += Float(event.deltaTime)
-                    Self.updateCenterPulse(on: orb, phase: pulsePhase)
-                    signalReadyOnce()
-                }
-            }
-            .onDisappear {
-                sceneUpdateSubscription?.cancel()
-                sceneUpdateSubscription = nil
-            }
-        }
+    
+     // MARK: - Pulse
+    /// Matte fill — no RealityKit lighting (avoids white specular arcs on the shell).
+    /// Knobs to adjust color of pulsating ORB
+    private var defaultOrbGradient: RadialGradient {
+        RadialGradient(
+            colors: [
+                nodeColor.opacity(0.06),
+                Theme.Colors.accent.opacity(0.11),
+                Theme.Colors.background.opacity(0.62)
+            ],
+            center: .center,
+            startRadius: 0,
+            endRadius: diameter * 0.28
+        )
     }
 
     // MARK: - Label
@@ -151,25 +122,6 @@ struct SpinningCosmoOrbView: View {
         guard !didSignalReady else { return }
         didSignalReady = true
         onSceneReady?()
-    }
-
-    private func signalReadyOnce() {
-        DispatchQueue.main.async {
-            signalReady()
-        }
-    }
-
-    // MARK: - Animation
-
-    private static func updateCenterPulse(on orb: Entity, phase: Float) {
-        let blend = CosmoOrbEntityBuilder.pulseBlend(phase: phase)
-        let scale = CosmoOrbEntityBuilder.pulseScale(phase: phase)
-        let pulseColor = CosmoOrbEntityBuilder.pulseColor(blend: blend)
-        let pulseMaterial = SimpleMaterial(color: pulseColor, isMetallic: false)
-
-        guard let dot = orb.findEntity(named: "centerPulse") as? ModelEntity else { return }
-        dot.scale = SIMD3<Float>(repeating: scale)
-        dot.model?.materials = [pulseMaterial]
     }
 
     private func colorFromHex(_ hex: String) -> UIColor? {
