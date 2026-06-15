@@ -27,17 +27,25 @@ struct HomeView: View {
             Theme.Colors.background
                 .ignoresSafeArea()
 
-            // Content area — swaps based on the selected tab.
-            Group {
-                switch selectedTab {
-                case .home:
+            // Content area — ExplorerView stays mounted (hidden) so revisiting the
+            // tab does not pay first-layout / image-decode cost again.
+            ZStack {
+                if selectedTab == .home {
                     HomeContentView {
                         showFrequenciesLibrary = true
                     }
-                case .explorer: ExplorerView()
-                case .search:   SearchView()
-                case .settings: SettingsView()
                 }
+                if selectedTab == .search {
+                    SearchView()
+                }
+                if selectedTab == .settings {
+                    SettingsView()
+                }
+
+                ExplorerView()
+                    .opacity(selectedTab == .explorer ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .explorer)
+                    .accessibilityHidden(selectedTab != .explorer)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // Leave room so content isn't hidden beneath the floating tab bar.
@@ -52,8 +60,14 @@ struct HomeView: View {
         // is always active (unlike putting it only inside ExplorerView).
         // The initial local hierarchy is already loaded when ExplorerViewModel
         // is created at app launch.
+        .overlay {
+            if CosmoRealityKitSupport.isSupported {
+                RealityKitWarmupView()
+            }
+        }
         .onAppear {
             explorerViewModel.updateWithServerData(sanity.emanations)
+            CosmoExplorerPrefetch.warm()
         }
         .onChange(of: sanity.emanations) { _, newEmanations in
             explorerViewModel.updateWithServerData(newEmanations)
@@ -80,7 +94,8 @@ struct HomeView: View {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             selectedTab = .explorer
         }
-        try? await Task.sleep(for: .milliseconds(250))
+        // Dwell on Explorer so RealityKit + ExplorerView compile under the splash.
+        try? await Task.sleep(for: .milliseconds(450))
 
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             selectedTab = .home

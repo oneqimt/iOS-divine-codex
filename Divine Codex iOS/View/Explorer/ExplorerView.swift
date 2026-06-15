@@ -85,17 +85,15 @@ struct ExplorerView: View {
                 showCosmologyScene = true
             } label: {
                 Text("Return to Source")
-                    .buttonStyle(PleromaButtonStyle())
                     .padding(.horizontal, Theme.Spacing.xl)
             }
+            .buttonStyle(PleromaButtonStyle())
             .padding()
 
         }
         .padding(.top, Theme.Spacing.lg)
-        .background {
-            if CosmoRealityKitSupport.isSupported {
-                RealityKitWarmupView()
-            }
+        .onAppear {
+            CosmoExplorerPrefetch.warm()
         }
         .fullScreenCover(isPresented: $showCosmologyScene) {
             CosmoExplorerView(explorerViewModel: explorerViewModel)
