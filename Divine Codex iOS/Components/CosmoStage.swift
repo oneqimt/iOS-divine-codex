@@ -173,33 +173,33 @@ struct CosmoStage: View {
 
     private func pairToken(_ pair: CosmoConsortPair, diameter: CGFloat) -> some View {
         let hitSide = max(diameter * 3.6, 96)
+        let captionWidth = pair.consort == nil ? diameter + 44 : diameter * 2.8
 
         return Button {
             viewModel.selectPair(pair)
             onSelectNode(pair.primary)
         } label: {
-            Group {
-                if let consort = pair.consort {
-                    HStack(spacing: 6) {
-                        CosmoNodeOrb(node: pair.primary, diameter: diameter, showsLabel: false)
-                        CosmoNodeOrb(node: consort, diameter: diameter, showsLabel: false)
+            VStack(spacing: 8) {
+                Group {
+                    if let consort = pair.consort {
+                        HStack(spacing: 6) {
+                            CosmoNodeOrb(node: pair.primary, diameter: diameter, showsLabel: false)
+                            CosmoNodeOrb(node: consort, diameter: diameter, showsLabel: false)
+                        }
+                    } else {
+                        CosmoNodeOrb(node: pair.primary, diameter: diameter, isEmphasized: false, showsLabel: false)
                     }
-                    .overlay(alignment: .bottom) {
-                        Text(pair.displayName)
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .frame(width: diameter * 2.8)
-                            .offset(y: diameter * 0.85)
-                    }
-                } else {
-                    CosmoNodeOrb(node: pair.primary, diameter: diameter, isEmphasized: false)
                 }
+
+                CosmoOrbRingCaption(
+                    title: pair.ringTitle,
+                    shortDescription: pair.ringShortDescription,
+                    maxWidth: captionWidth
+                )
             }
         }
         .buttonStyle(.plain)
-        .frame(width: hitSide, height: hitSide)
+        .frame(minWidth: hitSide)
         .contentShape(Rectangle())
     }
 

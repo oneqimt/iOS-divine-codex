@@ -96,12 +96,14 @@ struct SpinningCosmoOrbView: View {
                     .tracking(0.8)
             }
 
-            Text(node.name)
-                .font(.system(size: labelFontSize, weight: .semibold, design: .rounded))
-                .foregroundStyle(Theme.Colors.primaryText)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .frame(maxWidth: diameter + 40)
+            if let shortDescription = node.shortDescription {
+                Text(shortDescription)
+                    .font(.system(size: labelFontSize, weight: .regular, design: .rounded))
+                    .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(4)
+                    .frame(maxWidth: diameter + 40)
+            }
         }
     }
 

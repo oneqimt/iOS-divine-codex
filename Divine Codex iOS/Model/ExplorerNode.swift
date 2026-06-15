@@ -31,9 +31,12 @@ enum ExplorerNode: Identifiable, Hashable {
         emanation.id
     }
 
+    /// Display title from Sanity (`coalesce(title, name)` in GROQ).
     var name: String {
         emanation.name ?? "Untitled"
     }
+
+    var title: String { name }
 
     /// The emanation type as a lowercased string ("monad", "pleroma", "aeon"),
     /// used to drive layout fallbacks in the scene.

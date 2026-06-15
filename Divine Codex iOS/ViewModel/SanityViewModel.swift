@@ -66,7 +66,7 @@ final class SanityViewModel {
         // projected so the tree can be rebuilt in Swift. See IN_PROGRESS.md.
         let query = """
         *[_type == "emanation"] | order(order asc){
-          _id, name, "slug": slug.current, gender, order,
+          _id, "name": coalesce(title, name), "slug": slug.current, gender, order,
           "type": emanationType->name,
           "parentId": parent._ref,
           "consortId": consort._ref,

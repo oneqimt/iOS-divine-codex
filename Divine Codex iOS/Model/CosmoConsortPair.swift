@@ -16,12 +16,25 @@ struct CosmoConsortPair: Identifiable, Hashable, Sendable {
 
     var id: String { primary.id }
 
-    /// Label for the ring token (one or both names).
+    /// Title line for breadcrumbs and detail (one or both names).
     var displayName: String {
         if let consort {
             return "\(primary.name) · \(consort.name)"
         }
         return primary.name
+    }
+
+    /// Bare name(s) under the ring orb(s).
+    var ringTitle: String {
+        if let consort {
+            return "\(primary.title) · \(consort.title)"
+        }
+        return primary.title
+    }
+
+    /// Subtitle under the ring title.
+    var ringShortDescription: String? {
+        primary.shortDescription
     }
 
     /// Nodes to surface in detail (one or two).

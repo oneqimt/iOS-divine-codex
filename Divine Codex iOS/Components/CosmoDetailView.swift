@@ -53,13 +53,7 @@ struct CosmoDetailView: View {
             }
 
             header(for: node)
-
-            if let shortDescription = node.shortDescription {
-                Text(shortDescription)
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            // NOTE: Do not put short descripiton here
 
             bodySection(for: node)
             mediaSection(for: node)
@@ -76,7 +70,7 @@ struct CosmoDetailView: View {
                     .tracking(1.2)
             }
 
-            Text(node.name)
+            Text(node.title)
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.Colors.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
