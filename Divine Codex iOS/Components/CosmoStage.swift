@@ -191,7 +191,7 @@ struct CosmoStage: View {
                     }
                 }
 
-                CosmoOrbRingCaption(
+                CosmoOrbCaption(
                     title: pair.ringTitle,
                     shortDescription: pair.ringShortDescription,
                     maxWidth: captionWidth

@@ -33,11 +33,11 @@ struct SpinningCosmoOrbView: View {
                 .onLongPressGesture(minimumDuration: 0.45, perform: onLongPress)
 
             if showsLabel {
-                orbLabel
+                CosmoOrbCaption(node: node, diameter: diameter, scale: .emphasis)
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(node.name)
+        .accessibilityLabel(node.title)
         .accessibilityHint("Tap to enter. Long press for details.")
     }
 
@@ -82,33 +82,6 @@ struct SpinningCosmoOrbView: View {
             startRadius: 0,
             endRadius: diameter * 0.28
         )
-    }
-
-    // MARK: - Label
-
-    private var orbLabel: some View {
-        VStack(spacing: 3) {
-            if let type = node.emanationType {
-                Text(type.capitalized)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.Colors.divineGold)
-                    .textCase(.uppercase)
-                    .tracking(0.8)
-            }
-
-            if let shortDescription = node.shortDescription {
-                Text(shortDescription)
-                    .font(.system(size: labelFontSize, weight: .regular, design: .rounded))
-                    .foregroundStyle(Theme.Colors.primaryText.opacity(0.9))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(4)
-                    .frame(maxWidth: diameter + 40)
-            }
-        }
-    }
-
-    private var labelFontSize: CGFloat {
-        diameter > 100 ? 18 : (diameter > 60 ? 14 : 11)
     }
 
     private var nodeColor: Color {
