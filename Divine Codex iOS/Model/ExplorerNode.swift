@@ -69,12 +69,17 @@ enum ExplorerNode: Identifiable, Hashable {
               !raw.isEmpty else { return nil }
         return URL(string: raw)
     }
+    
+    // MARK - Hash
 
     // Manual Equatable + Hashable conformance based on stable ID.
+    // Swift’s rule: if == is custom, hash(into:) must match — equal values must produce the same hash. Hashing id is the correct partner to id-only equality.
     static func == (lhs: ExplorerNode, rhs: ExplorerNode) -> Bool {
         lhs.id == rhs.id
     }
-
+    // required by Hashable and must stay aligned with ==.
+    // Identity is stable Sanity _id only — keeps refetch updates from rebuilding
+    // the tree when content changes. hash(into:) must match == (Swift Hashable rule).
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
