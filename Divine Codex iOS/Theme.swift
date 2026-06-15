@@ -35,6 +35,8 @@ enum Theme {
 
         /// Brand accent — Sophia / sacred glow.
         static let accent = Color.indigo
+        
+        static let black = Color.black
 
         /// Warm divine highlight, used sparingly.
         static let divineGold = Color(red: 0.93, green: 0.78, blue: 0.43)
@@ -134,10 +136,12 @@ struct PleromaButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .padding(.horizontal, Theme.Spacing.md)
+            // Non-interactive glass — `.interactive()` can swallow Button taps.
             .glassEffect(
-                .regular.tint(Theme.Colors.accent.opacity(0.55)).interactive(),
+                .regular.tint(Theme.Colors.black.opacity(0.88)),
                 in: .capsule
             )
+            .contentShape(Capsule())
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }

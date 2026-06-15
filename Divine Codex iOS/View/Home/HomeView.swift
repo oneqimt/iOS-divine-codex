@@ -12,6 +12,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab: MainTab = .home
+    @State private var showFrequenciesLibrary = false
     @Environment(SanityViewModel.self) private var sanity
     @Environment(ExplorerViewModel.self) private var explorerViewModel
 
@@ -29,7 +30,10 @@ struct HomeView: View {
             // Content area — swaps based on the selected tab.
             Group {
                 switch selectedTab {
-                case .home:     HomeContentView()
+                case .home:
+                    HomeContentView {
+                        showFrequenciesLibrary = true
+                    }
                 case .explorer: ExplorerView()
                 case .search:   SearchView()
                 case .settings: SettingsView()
@@ -57,6 +61,9 @@ struct HomeView: View {
         .task {
             await warmUpLiquidGlass()
             onWarmupComplete()
+        }
+        .fullScreenCover(isPresented: $showFrequenciesLibrary) {
+            FrequenciesLibraryView()
         }
     }
 
@@ -100,7 +107,8 @@ struct HomeView: View {
 private struct HomeContentView: View {
     @Environment(SacredFrequenciesViewModel.self) private var frequenciesVM
     @Environment(SanityViewModel.self) private var sanity
-    @State private var showFrequenciesLibrary = false
+
+    var onSacredFrequenciesTap: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -118,9 +126,7 @@ private struct HomeContentView: View {
             .allowsHitTesting(false)
 
             VStack(spacing: Theme.Spacing.md) {
-                Button {
-                    showFrequenciesLibrary = true
-                } label: {
+                Button(action: onSacredFrequenciesTap) {
                     Label {
                         VStack(spacing: 2) {
                             Text("Sacred Frequencies")
@@ -148,9 +154,6 @@ private struct HomeContentView: View {
             .padding(.horizontal, Theme.Spacing.lg)
             .padding(.bottom, 130)
             .frame(maxWidth: .infinity)
-        }
-        .fullScreenCover(isPresented: $showFrequenciesLibrary) {
-            FrequenciesLibraryView()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // The image lives in the background so it centers against the **true
