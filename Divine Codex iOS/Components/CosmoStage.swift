@@ -5,7 +5,7 @@
 //  Spatial, hierarchy-aware cosmology navigator. Replaces the flat carousel
 //  with a drill-down hero stage: Monad → Pleroma → Aeon consort ring.
 //
-//  Wayfinding: tap the parent ghost orb or swipe from the leading edge to drill up.
+//  Wayfinding: tap the breadcrumb, parent ghost orb, or swipe from the leading edge to drill up.
 //
 
 import SwiftUI
@@ -34,8 +34,11 @@ struct CosmoStage: View {
             .contentShape(Rectangle())
         }
         .overlay(alignment: .top) {
-            CosmoWayfindingLabel(title: viewModel.stageBreadcrumb)
-                .padding(.top, 8)
+            CosmoWayfindingLabel(
+                title: viewModel.stageBreadcrumb,
+                action: viewModel.canDrillUpFromBreadcrumb ? { viewModel.drillUp() } : nil
+            )
+            .padding(.top, 8)
         }
         .overlay(alignment: .bottom) {
             stageHint
@@ -242,12 +245,12 @@ struct CosmoStage: View {
                 }
             case .pleroma:
                 if !viewModel.displayUnits.isEmpty {
-                    hintLabel("Tap to meet the Aeons · Swipe left to return · Long press for details")
+                    hintLabel("Tap to meet the Aeons · Tap path above to return · Long press for details")
                 } else {
-                    hintLabel("Swipe left to return")
+                    hintLabel("Tap path above to return")
                 }
             case .aeons:
-                hintLabel("Tap an emanation · Swipe left or tap center to return")
+                hintLabel("Tap an emanation · Tap path above or center orb to return")
             }
         }
     }

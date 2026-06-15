@@ -156,19 +156,25 @@ final class ExplorerViewModel {
         return aeonNodes.map { CosmoConsortPair(primary: $0, consort: nil) }
     }
 
-    private var monadName: String { monad?.name ?? "Monad" }
-    private var pleromaName: String { pleroma?.name ?? "Pleroma" }
+    /// Monad segment in breadcrumbs — type label, not the node's display name ("The One").
+    private var monadBreadcrumbLabel: String { monad?.typeLabel ?? "Monad" }
+    private var pleromaBreadcrumbLabel: String { pleroma?.name ?? "Pleroma" }
 
     /// Full hierarchy breadcrumb for the current stage depth.
     var stageBreadcrumb: String {
         switch stageDepth {
         case .monad:
-            return monadName
+            return monadBreadcrumbLabel
         case .pleroma:
-            return "\(monadName) › \(pleromaName)"
+            return "\(monadBreadcrumbLabel) › \(pleromaBreadcrumbLabel)"
         case .aeons:
-            return "\(monadName) › \(pleromaName) › Aeons"
+            return "\(monadBreadcrumbLabel) › \(pleromaBreadcrumbLabel) › Aeons"
         }
+    }
+
+    /// Whether the stage breadcrumb can drill up one level (Pleroma / Aeons).
+    var canDrillUpFromBreadcrumb: Bool {
+        stageDepth != .monad
     }
 
     /// Breadcrumb shown on detail — extends the stage path with the selection.
@@ -176,11 +182,11 @@ final class ExplorerViewModel {
         let selection = pair.displayName
         switch stageDepth {
         case .monad:
-            return "\(monadName) › \(selection)"
+            return "\(monadBreadcrumbLabel) › \(selection)"
         case .pleroma:
-            return "\(monadName) › \(pleromaName) › \(selection)"
+            return "\(monadBreadcrumbLabel) › \(pleromaBreadcrumbLabel) › \(selection)"
         case .aeons:
-            return "\(monadName) › \(pleromaName) › Aeons › \(selection)"
+            return "\(monadBreadcrumbLabel) › \(pleromaBreadcrumbLabel) › Aeons › \(selection)"
         }
     }
 

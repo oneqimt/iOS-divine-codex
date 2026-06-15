@@ -44,6 +44,11 @@ enum ExplorerNode: Identifiable, Hashable {
         emanation.type?.lowercased()
     }
 
+    /// Human-readable type for breadcrumbs and wayfinding ("Monad", "Pleroma", "Aeon").
+    var typeLabel: String {
+        emanation.type ?? emanationType?.capitalized ?? "Emanation"
+    }
+
     var shortDescription: String? {
         emanation.shortDescription
     }
