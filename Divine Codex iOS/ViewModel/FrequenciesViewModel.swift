@@ -13,7 +13,7 @@ import Observation
 
 @Observable
 @MainActor
-final class SacredFrequenciesViewModel {
+final class FrequenciesViewModel {
 
     // MARK: - Playback state
 

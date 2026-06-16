@@ -10,7 +10,7 @@ import SwiftUI
 struct FrequenciesLibraryView: View {
 
     @Environment(SanityViewModel.self) private var sanity
-    @Environment(SacredFrequenciesViewModel.self) private var frequenciesVM
+    @Environment(FrequenciesViewModel.self) private var frequenciesVM
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFrequency: Frequency?
@@ -198,6 +198,6 @@ private struct FrequencyRow: View {
 #Preview {
     FrequenciesLibraryView()
         .environment(SanityViewModel.preview)
-        .environment(SacredFrequenciesViewModel())
+        .environment(FrequenciesViewModel())
 }
 #endif

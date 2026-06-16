@@ -120,7 +120,7 @@ struct HomeView: View {
 /// - The tagline respects the safe area; the parent reserves room beneath
 ///   it for the floating tab bar.
 private struct HomeContentView: View {
-    @Environment(SacredFrequenciesViewModel.self) private var frequenciesVM
+    @Environment(FrequenciesViewModel.self) private var frequenciesVM
     @Environment(SanityViewModel.self) private var sanity
 
     var onSacredFrequenciesTap: () -> Void
@@ -189,14 +189,14 @@ private struct HomeContentView: View {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
-        .environment(SacredFrequenciesViewModel())
+        .environment(FrequenciesViewModel())
 }
 
 #Preview("iPhone Landscape", traits: .landscapeLeft) {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
-        .environment(SacredFrequenciesViewModel())
+        .environment(FrequenciesViewModel())
 }
 
 // Note: To preview on a specific device (e.g. iPad), use the device picker
@@ -206,5 +206,5 @@ private struct HomeContentView: View {
     HomeView()
         .environment(ExplorerViewModel())
         .environment(SanityViewModel.preview)
-        .environment(SacredFrequenciesViewModel())
+        .environment(FrequenciesViewModel())
 }

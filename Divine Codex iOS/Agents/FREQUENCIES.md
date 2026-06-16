@@ -1,4 +1,4 @@
-# Sacred Frequencies — Feature Reference
+# Frequencies — Feature Reference
 
 > **Status**: **End-to-end working** — audio + muted hero video loops on device (June 2026)  
 > **Priority**: **Game changer** — primary App Store differentiation & user personalization  
@@ -355,12 +355,12 @@ Cloudflare warns against relying on the **Public Development URL** in production
 |------|------|
 | `Model/Frequency.swift` | Decoded Sanity model + DEBUG `sampleSet` |
 | `ViewModel/SanityViewModel.swift` | `frequencies`, `fetchFrequencies()` |
-| `ViewModel/SacredFrequenciesViewModel.swift` | `AVPlayer`, loop, favorites (UserDefaults) |
+| `ViewModel/FrequenciesViewModel.swift` | `AVPlayer`, loop, favorites (UserDefaults) |
 | `View/Frequencies/FrequenciesLibraryView.swift` | Browse + favorites filter |
 | `View/Frequencies/FrequencyPlayerView.swift` | Full-screen player UI |
 | `Components/LoopingMutedVideoView.swift` | Muted R2 MP4 hero loop (`AVPlayerLooper`) |
 | `View/Home/HomeView.swift` | Home CTA + `fullScreenCover` entry |
-| `Divine_Codex_iOSApp.swift` | Injects `SacredFrequenciesViewModel`; prefetches on launch |
+| `Divine_Codex_iOSApp.swift` | Injects `FrequenciesViewModel`; prefetches on launch |
 
 ### Personalization (v1)
 
@@ -479,7 +479,7 @@ Demo account not required if favorites work with iCloud / local storage and cont
 - Hero cover art sized with **`onGeometryChange`** (preferred over `GeometryReader`)  
 - Dynamic square cover dominates launch viewport; guidance text scrolls on small devices  
 
-**Loop fixes (`SacredFrequenciesViewModel`):**
+**Loop fixes (`FrequenciesViewModel`):**
 - `applyLoopDefault(from:)` on player open — Sanity seeds initial loop state  
 - User loop toggle no longer reset when `play()` starts a new `AVPlayerItem`  
 - Loop off: rewind at track end so play restarts from beginning  

@@ -31,7 +31,7 @@ struct Divine_Codex_iOSApp: App {
     @State private var explorerViewModel: ExplorerViewModel
 
     /// Playback + favorites for Sacred Frequencies (CloudKit sync planned).
-    @State private var sacredFrequenciesVM: SacredFrequenciesViewModel
+    @State private var sacredFrequenciesVM: FrequenciesViewModel
 
     init() {
         // 1. Make sure the API token is loaded into TokenManager before we
@@ -61,7 +61,7 @@ struct Divine_Codex_iOSApp: App {
         //    creation timing is identical and deterministic.
         _sanity = State(initialValue: SanityViewModel(client: client))
         _explorerViewModel = State(initialValue: ExplorerViewModel())
-        _sacredFrequenciesVM = State(initialValue: SacredFrequenciesViewModel())
+        _sacredFrequenciesVM = State(initialValue: FrequenciesViewModel())
     }
 
     var body: some Scene {

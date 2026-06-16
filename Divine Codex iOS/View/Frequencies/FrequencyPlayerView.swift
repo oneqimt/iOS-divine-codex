@@ -11,7 +11,7 @@ import SwiftUI
 struct FrequencyPlayerView: View {
 
     let frequency: Frequency
-    let frequenciesVM: SacredFrequenciesViewModel
+    let frequenciesVM: FrequenciesViewModel
     @Environment(\.dismiss) private var dismiss
 
     /// Container size observed via `onGeometryChange`. Defaults to `.zero`
@@ -267,7 +267,7 @@ struct FrequencyPlayerView: View {
 #Preview {
     FrequencyPlayerView(
         frequency: .sampleSet[0],
-        frequenciesVM: SacredFrequenciesViewModel()
+        frequenciesVM: FrequenciesViewModel()
     )
 }
 #endif
